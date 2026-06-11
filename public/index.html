@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAM 科課程問卷調查 2025-2026</title>
+<style>
+  :root {
+    --primary: #2563eb; --primary-light: #dbeafe; --primary-dark: #1d4ed8;
+    --success: #16a34a; --warning: #f59e0b; --danger: #dc2626;
+    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --text-light: #64748b;
+    --border: #e2e8f0; --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, var(--primary), #7c3aed); color: white; padding: 32px 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .header p { opacity: 0.85; font-size: 0.95rem; }
+
+  /* Card */
+  .card { background: var(--card); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+  .card h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .step { background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+
+  /* Form elements */
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 120px; }
+  .form-group label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; font-weight: 600; }
+  select, input[type="number"] {
+    width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; background: white; transition: border-color 0.2s;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--primary); }
+
+  /* Likert scale */
+  .question-block { padding: 16px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid var(--primary); }
+  .question-text { font-size: 0.95rem; font-weight: 600; margin-bottom: 10px; }
+  .likert-row { display: flex; gap: 6px; justify-content: space-between; }
+  .likert-btn {
+    flex: 1; padding: 8px 4px; border: 2px solid var(--border); border-radius: 8px; background: white; cursor: pointer; text-align: center; transition: all 0.2s; font-size: 0.8rem;
+  }
+  .likert-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+  .likert-btn.selected { border-color: var(--primary); background: var(--primary); color: white; }
+  .likert-btn .score { font-size: 1.2rem; font-weight: bold; display: block; }
+
+  /* Student entries */
+  .student-entry { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; position: relative; }
+  .student-entry .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .student-entry .entry-num { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+  .remove-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; }
+  .remove-btn:hover { background: #fef2f2; }
+
+  /* Buttons */
+  .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #15803d; }
+  .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-group { display: flex; gap: 12px; margin-top: 16px; }
+
+  /* Status */
+  .status { padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; display: none; }
+  .status.show { display: block; }
+  .status.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .status.error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+  .status.info { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
+
+  /* Progress */
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 16px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; border-radius: 3px; }
+
+  /* Counter */
+  .counter { text-align: center; font-size: 0.9rem; color: var(--text-light); margin: 8px 0; }
+  .counter strong { color: var(--primary); font-size: 1.1rem; }
+
+  /* Scale labels */
+  .scale-labels { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.75rem; color: var(--text-light); padding: 0 4px; }
+
+  /* Type toggle */
+  .type-toggle { display: flex; background: var(--border); border-radius: 8px; padding: 3px; margin-bottom: 16px; }
+  .type-toggle button { flex: 1; padding: 10px; border: none; background: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
+  .type-toggle button.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+
+  /* Spinner */
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Batch mode */
+  .batch-info { background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.9rem; }
+  .batch-info strong { color: #92400e; }
+
+  @media (max-width: 600px) {
+    .container { padding: 12px; }
+    .card { padding: 16px; }
+    .form-row { flex-direction: column; gap: 8px; }
+    .likert-btn .score { font-size: 1rem; }
+    .likert-btn { padding: 6px 2px; }
+    .header h1 { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>樂善堂梁黃蕙芳紀念學校</h1>
+  <p>STEAM 科課程問卷調查 2025-2026</p>
+</div>
+
+<div class="container">
+  <!-- Type Toggle -->
+  <div class="type-toggle">
+    <button class="active" onclick="switchType('student')">學生問卷</button>
+    <button onclick="switchType('teacher')">教師問卷</button>
+  </div>
+
+  <!-- Step 1: Grade & Class -->
+  <div class="card">
+    <h2><span class="step">1</span> 選擇年級及班別</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>年級</label>
+        <select id="selGrade" onchange="onGradeChange()">
+          <option value="">-- 請選擇 --</option>
+          <option value="P1">小一 (P1)</option>
+          <option value="P2">小二 (P2)</option>
+          <option value="P3">小三 (P3)</option>
+          <option value="P4">小四 (P4)</option>
+          <option value="P5">小五 (P5)</option>
+          <option value="P6">小六 (P6)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>班別</label>
+        <select id="selClass" onchange="onClassChange()">
+          <option value="">-- 請選擇 --</option>
+          <option value="A">A 班</option>
+          <option value="B">B 班</option>
+          <option value="C">C 班</option>
+          <option value="D">D 班</option>
+          <option value="E">E 班</option>
+        </select>
+      </div>
+      <div class="form-group" id="batchGroup">
+        <label>班級人數</label>
+        <input type="number" id="batchSize" min="1" max="40" value="30" onchange="onBatchSizeChange()">
+      </div>
+    </div>
+    <div id="teacherInfo" class="hidden batch-info">
+      <strong>教師問卷</strong>：只需提交一份（代表該級該班的教師評估），不需要逐位學生填寫。
+    </div>
+  </div>
+
+  <!-- Step 2: Questions -->
+  <div class="card" id="questionsCard">
+    <h2><span class="step">2</span> <span id="qTitle">問題</span></h2>
+    <div id="questionsArea"></div>
+  </div>
+
+  <!-- Step 3: Student entries (student mode only) -->
+  <div class="card hidden" id="studentsCard">
+    <h2><span class="step">3</span> 輸入學生回應</h2>
+    <div class="counter">已輸入 <strong id="studentCount">0</strong> 位學生</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div id="studentsArea"></div>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="addStudent()">+ 加一位學生</button>
+      <button class="btn btn-outline" onclick="fillRemaining()" id="fillRemainBtn">自動填入剩餘</button>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="card hidden" id="submitCard">
+    <h2><span class="step">✓</span> 提交問卷</h2>
+    <p id="submitSummary" style="margin-bottom: 12px; color: var(--text-light);"></p>
+    <div class="btn-group">
+      <button class="btn btn-success" id="submitBtn" onclick="submitSurvey()">提交問卷結果</button>
+      <button class="btn btn-outline" onclick="resetAll()">重新填寫</button>
+    </div>
+    <div class="status" id="submitStatus"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ CONFIG ═══════════ */
+const API_BASE = ""; // Same origin (Cloudflare Pages + Functions)
+
+const QUESTIONS = {
+  student: {
+    P1: [
+      "我喜歡用 Matatalab 機械人學習編程",
+      "Code.org 的編程遊戲讓我覺得很有趣",
+      "我學會了用鍵盤正確地打字",
+      "電腦堂的活動讓我學到新知識",
+      "我期待每一節 STEAM 課"
+    ],
+    P2: [
+      "我喜歡用 Scratch Jr 創作故事",
+      "Matatalab 方向挑戰幫助我理解方向概念",
+      "我學會了用 Word 製作文件",
+      "用 iPad 學習讓課堂更有趣",
+      "STEAM 科的活動讓我更有創意"
+    ],
+    P3: [
+      "我喜歡用 Micro:bit 進行編程",
+      "Code.org 幫助我理解序列和重複的概念",
+      "我學會了製作 PowerPoint 簡報",
+      "我學會了安全地使用互聯網",
+      "STEAM 科的課堂活動很有趣"
+    ],
+    P4: [
+      "我喜歡在騰訊 AI 平台上學習",
+      "AI 生成圖片和文字讓我覺得很有趣",
+      "製作太陽能動力車讓我學到科學知識",
+      "健康生活程式設計幫助我了解健康生活習慣",
+      "STEAM 科的活動讓我更有解難能力"
+    ],
+    P5: [
+      "我喜歡用 AI 製作中華文化翻譯官",
+      "四格漫畫創作讓我更有創意",
+      "八大行星互動導覽讓我學到更多知識",
+      "STEAM DAY 活動讓我對環保有更深認識",
+      "我覺得 AI 工具能幫助我更好地學習"
+    ],
+    P6: [
+      "AI 植物百科（識花君）讓我對植物更感興趣",
+      "專題研習提升了我的研究能力",
+      "一帶一路互動地圖幫助我了解中國地理",
+      "AI 幫助我探索未來的職業方向",
+      "SUNO AI 音樂創作讓我體驗到科技的樂趣"
+    ]
+  },
+  teacher: [
+    "STEAM 科課程有效提升學生的運算思維",
+    "騰訊 AI 平台適合用於課堂教學",
+    "STEAM DAY 活動有助學生理解科技與環保的關係",
+    "跨科整合能有效提升學生的學習動機",
+    "現有課程安排和資源足以支援教學需要"
+  ]
+};
+
+const SCALE_LABELS = ["完全不同意", "不同意", "普通", "同意", "非常同意"];
+
+/* ═══════════ STATE ═══════════ */
+let state = {
+  type: "student",        // "student" | "teacher"
+  grade: "",
+  className: "",
+  batchSize: 30,
+  students: [],           // [{responses: [1-5, ...]}]
+  teacherResponses: [],   // [1-5, ...]
+};
+
+/* ═══════════ TYPE SWITCH ═══════════ */
+function switchType(type) {
+  state.type = type;
+  document.querySelectorAll(".type-toggle button").forEach((b, i) => {
+    b.classList.toggle("active", (i === 0 && type === "student") || (i === 1 && type === "teacher"));
+  });
+  document.getElementById("teacherInfo").classList.toggle("hidden", type === "student");
+  document.getElementById("batchGroup").classList.toggle("hidden", type === "teacher");
+  document.getElementById("studentsCard").classList.toggle("hidden", type === "teacher");
+  if (type === "teacher") {
+    document.getElementById("submitCard").classList.remove("hidden");
+  }
+  onGradeChange();
+}
+
+/* ═══════════ GRADE CHANGE ═══════════ */
+function onGradeChange() {
+  state.grade = document.getElementById("selGrade").value;
+  state.className = document.getElementById("selClass").value;
+  state.students = [];
+  state.teacherResponses = [];
+
+  if (!state.grade) {
+    document.getElementById("questionsCard").classList.add("hidden");
+    document.getElementById("studentsCard").classList.add("hidden");
+    document.getElementById("submitCard").classList.add("hidden");
+    return;
+  }
+
+  // Show questions
+  document.getElementById("questionsCard").classList.remove("hidden");
+  const questions = state.type === "student" ? QUESTIONS.student[state.grade] : QUESTIONS.teacher;
+  const title = state.type === "student" ? `${state.grade} 學生問卷題目` : "教師問卷題目";
+  document.getElementById("qTitle").textContent = title;
+
+  let html = "";
+  questions.forEach((q, i) => {
+    html += `<div class="question-block"><div class="question-text">Q${i+1}. ${q}</div></div>`;
+  });
+  document.getElementById("questionsArea").innerHTML = html;
+
+  if (state.type === "teacher" && state.className) {
+    renderTeacherForm();
+  } else if (state.type === "student") {
+    updateStudentArea();
+  }
+}
+
+function onClassChange() {
+  state.className = document.getElementById("selClass").value;
+  if (state.type === "teacher" && state.grade && state.className) {
+    document.getElementById("submitCard").classList.remove("hidden");
+    renderTeacherForm();
+  }
+  if (state.type === "student") {
+    updateStudentArea();
+  }
+}
+
+function onBatchSizeChange() {
+  state.batchSize = parseInt(document.getElementById("batchSize").value) || 30;
+  updateStudentArea();
+}
+
+/* ═══════════ TEACHER FORM ═══════════ */
+function renderTeacherForm() {
+  const questions = QUESTIONS.teacher;
+  let html = `<div class="student-entry"><div class="entry-header"><span class="entry-num">教師評估</span></div>`;
+  questions.forEach((q, qi) => {
+    html += renderLikert("teacher", 0, qi, q);
+  });
+  html += `</div>`;
+  document.getElementById("questionsArea").innerHTML = html;
+  document.getElementById("submitCard").classList.remove("hidden");
+  updateSubmitSummary();
+}
+
+/* ═══════════ STUDENT ENTRIES ═══════════ */
+function renderLikert(prefix, si, qi, qText) {
+  let html = `<div class="question-block"><div class="question-text">Q${qi+1}. ${qText}</div>`;
+  html += `<div class="scale-labels"><span>完全不同意</span><span>不同意</span><span>普通</span><span>同意</span><span>非常同意</span></div>`;
+  html += `<div class="likert-row">`;
+  for (let s = 1; s <= 5; s++) {
+    const sel = getResponse(prefix, si, qi) === s ? "selected" : "";
+    html += `<button class="likert-btn ${sel}" onclick="setResponse('${prefix}',${si},${qi},${s})"><span class="score">${s}</span>${SCALE_LABELS[s-1]}</button>`;
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+function getResponse(prefix, si, qi) {
+  if (prefix === "teacher") return state.teacherResponses[qi] || 0;
+  return (state.students[si] && state.students[si].responses[qi]) || 0;
+}
+
+function setResponse(prefix, si, qi, val) {
+  if (prefix === "teacher") {
+    state.teacherResponses[qi] = val;
+  } else {
+    if (!state.students[si]) state.students[si] = { responses: [0,0,0,0,0] };
+    state.students[si].responses[qi] = val;
+  }
+  onGradeChange(); // re-render
+  if (state.type === "student") {
+    state.grade && document.getElementById("selGrade").dispatchEvent(new Event("change"));
+    updateStudentArea();
+  }
+}
+
+function addStudent() {
+  if (state.students.length >= state.batchSize) {
+    alert(`已達班級人數上限（${state.batchSize} 人）`);
+    return;
+  }
+  state.students.push({ responses: [0,0,0,0,0] });
+  updateStudentArea();
+  // Scroll to new entry
+  setTimeout(() => {
+    const area = document.getElementById("studentsArea");
+    const last = area.lastElementChild;
+    if (last) last.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 50);
+}
+
+function removeStudent(idx) {
+  state.students.splice(idx, 1);
+  updateStudentArea();
+}
+
+function fillRemaining() {
+  const remaining = state.batchSize - state.students.length;
+  if (remaining <= 0) return;
+  // Pre-fill with random responses for quick testing
+  // In real use, teacher would fill each student individually
+  for (let i = 0; i < remaining; i++) {
+    state.students.push({ responses: [0,0,0,0,0] });
+  }
+  updateStudentArea();
+}
+
+function updateStudentArea() {
+  if (!state.grade || state.type !== "student") return;
+
+  document.getElementById("studentsCard").classList.remove("hidden");
+  document.getElementById("studentCount").textContent = state.students.length;
+
+  const pct = state.batchSize > 0 ? (state.students.length / state.batchSize * 100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+
+  const questions = QUESTIONS.student[state.grade];
+  let html = "";
+  state.students.forEach((stu, si) => {
+    html += `<div class="student-entry">`;
+    html += `<div class="entry-header"><span class="entry-num">學生 ${si + 1}</span>`;
+    html += `<button class="remove-btn" onclick="removeStudent(${si})">✕ 移除</button></div>`;
+    questions.forEach((q, qi) => {
+      html += renderLikert("student", si, qi, q);
+    });
+    html += `</div>`;
+  });
+  document.getElementById("studentsArea").innerHTML = html;
+
+  document.getElementById("fillRemainBtn").textContent =
+    `自動加入剩餘 ${Math.max(0, state.batchSize - state.students.length)} 位`;
+
+  updateSubmitSummary();
+}
+
+function updateSubmitSummary() {
+  const el = document.getElementById("submitSummary");
+  if (state.type === "student") {
+    const complete = state.students.filter(s => s.responses.every(r => r > 0)).length;
+    el.textContent = `${state.grade} ${state.className}班 — 共 ${state.students.length} 位學生，已完整填寫 ${complete} 位`;
+    document.getElementById("submitCard").classList.toggle("hidden", state.students.length === 0);
+  } else {
+    const complete = state.teacherResponses.every(r => r > 0);
+    el.textContent = `${state.grade} ${state.className}班 教師問卷 — ${complete ? "已填寫" : "未完成"}`;
+  }
+}
+
+/* ═══════════ SUBMIT ═══════════ */
+async function submitSurvey() {
+  const btn = document.getElementById("submitBtn");
+  const status = document.getElementById("submitStatus");
+
+  // Validate
+  if (state.type === "student") {
+    const incomplete = state.students.filter(s => s.responses.some(r => r === 0));
+    if (incomplete.length > 0) {
+      showStatus(status, "error", `有 ${incomplete.length} 位學生尚有未回答的題目，請先完成所有題目。`);
+      return;
+    }
+  } else {
+    if (state.teacherResponses.some(r => r === 0)) {
+      showStatus(status, "error", "請回答所有題目。");
+      return;
+    }
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>提交中...';
+
+  try {
+    if (state.type === "student") {
+      // Submit each student
+      for (const stu of state.students) {
+        await fetch(`${API_BASE}/api/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            grade: state.grade,
+            className: state.className,
+            type: "student",
+            responses: stu.responses,
+          }),
+        });
+      }
+      showStatus(status, "success", `成功提交 ${state.students.length} 位學生的問卷結果！`);
+    } else {
+      await fetch(`${API_BASE}/api/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          grade: state.grade,
+          className: state.className,
+          type: "teacher",
+          responses: state.teacherResponses,
+        }),
+      });
+      showStatus(status, "success", "成功提交教師問卷結果！");
+    }
+  } catch (e) {
+    showStatus(status, "error", "提交失敗：" + e.message);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "提交問卷結果";
+}
+
+function showStatus(el, type, msg) {
+  el.className = `status show ${type}`;
+  el.textContent = msg;
+}
+
+function resetAll() {
+  if (!confirm("確定要重新填寫嗎？所有未提交的資料將會清除。")) return;
+  state.students = [];
+  state.teacherResponses = [];
+  onGradeChange();
+  if (state.type === "student") updateStudentArea();
+}
+</script>
+</body>
+</html>

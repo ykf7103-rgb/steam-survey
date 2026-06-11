@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+.dev.vars
+index_local.html
+admin_local.html

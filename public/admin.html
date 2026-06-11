@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAM 科問卷 — 管理後台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #2563eb; --primary-light: #dbeafe; --primary-dark: #1d4ed8;
+    --success: #16a34a; --warning: #f59e0b; --danger: #dc2626;
+    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --text-light: #64748b;
+    --border: #e2e8f0; --radius: 12px;
+    --score5: #16a34a; --score4: #65a30d; --score3: #f59e0b; --score2: #ea580c; --score1: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .header { background: linear-gradient(135deg, #7c3aed, var(--primary)); color: white; padding: 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 1.4rem; }
+  .header p { opacity: 0.85; font-size: 0.9rem; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+  .card h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 16px; }
+
+  /* Login */
+  .login-box { max-width: 400px; margin: 60px auto; text-align: center; }
+  .login-box input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; margin-bottom: 12px; font-family: inherit; }
+  .login-box input:focus { outline: none; border-color: var(--primary); }
+
+  /* Buttons */
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--success); color: white; }
+  .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* Selectors */
+  .selector-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+  .selector-row .form-group { min-width: 100px; }
+  .form-group label { display: block; font-size: 0.8rem; color: var(--text-light); margin-bottom: 4px; font-weight: 600; }
+  select { width: 100%; padding: 8px 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
+
+  /* Stats grid */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: #f1f5f9; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+  .stat-card .stat-label { font-size: 0.8rem; color: var(--text-light); }
+
+  /* Table */
+  .results-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .results-table th, .results-table td { padding: 10px 12px; text-align: center; border: 1px solid var(--border); font-size: 0.9rem; }
+  .results-table th { background: var(--primary); color: white; font-weight: 600; }
+  .results-table tr:nth-child(even) { background: #f8fafc; }
+  .results-table .avg { font-weight: 700; font-size: 1.05rem; }
+
+  /* Score colors */
+  .score-5 { color: var(--score5); font-weight: 700; }
+  .score-4 { color: var(--score4); }
+  .score-3 { color: var(--score3); }
+  .score-2 { color: var(--score2); }
+  .score-1 { color: var(--score1); font-weight: 700; }
+
+  /* Chart container */
+  .chart-container { position: relative; height: 300px; margin-bottom: 20px; }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--border); border-radius: 8px; padding: 3px; }
+  .tab { flex: 1; padding: 8px 12px; border: none; background: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; font-family: inherit; text-align: center; transition: all 0.2s; }
+  .tab.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .hidden { display: none !important; }
+  .empty-msg { text-align: center; color: var(--text-light); padding: 40px; font-size: 1rem; }
+  .loading { text-align: center; padding: 30px; color: var(--text-light); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>STEAM 科問卷調查 — 管理後台</h1>
+  <p>樂善堂梁黃蕙芳紀念學校 2025-2026</p>
+</div>
+
+<div class="container">
+  <!-- Login -->
+  <div id="loginSection">
+    <div class="card login-box">
+      <h2>管理員登入</h2>
+      <input type="password" id="pwdInput" placeholder="請輸入管理密碼" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn btn-primary" onclick="doLogin()" style="width:100%">登入</button>
+      <p id="loginErr" style="color:var(--danger);margin-top:8px;font-size:0.85rem" class="hidden"></p>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboardSection" class="hidden">
+    <!-- Controls -->
+    <div class="card">
+      <div class="selector-row">
+        <div class="form-group">
+          <label>問卷類型</label>
+          <select id="dType" onchange="loadResults()">
+            <option value="student">學生問卷</option>
+            <option value="teacher">教師問卷</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>年級</label>
+          <select id="dGrade" onchange="loadResults()">
+            <option value="">全部</option>
+            <option value="P1">P1</option><option value="P2">P2</option>
+            <option value="P3">P3</option><option value="P4">P4</option>
+            <option value="P5">P5</option><option value="P6">P6</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-success" onclick="exportCSV()">匯出 CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="card" id="overviewCard">
+      <h2>整體概覽</h2>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+
+    <!-- Results by class -->
+    <div class="card" id="resultsCard">
+      <h2>各班詳細結果</h2>
+      <div id="resultsContent"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="card">
+      <h2>分佈圖表</h2>
+      <div id="chartsContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = ""; // Same origin (Cloudflare Pages + Functions)
+const ADMIN_PWD = "steam2026";
+
+const QUESTIONS_TEXT = {
+  student: {
+    P1: ["Matatalab編程","Code.org遊戲","鍵盤打字","電腦堂活動","期待STEAM課"],
+    P2: ["Scratch Jr故事","Matatalab方向","Word文件","iPad學習","STEAM創意"],
+    P3: ["Micro:bit編程","Code.org序列","PPT簡報","安全上網","STEAM有趣"],
+    P4: ["騰訊AI平台","AI生成","太陽能車","健康生活","解難能力"],
+    P5: ["AI翻譯官","四格漫畫","八大行星","STEAM DAY環保","AI工具學習"],
+    P6: ["AI識花君","專題研習","一帶一路","AI職業探索","SUNO音樂"],
+  },
+  teacher: ["運算思維","騰訊AI平台","STEAM DAY環保","跨科整合","課程資源"],
+};
+
+let auth = "";
+let currentData = null;
+let charts = {};
+
+/* ═══ LOGIN ═══ */
+function doLogin() {
+  const pwd = document.getElementById("pwdInput").value;
+  if (pwd !== ADMIN_PWD) {
+    document.getElementById("loginErr").classList.remove("hidden");
+    document.getElementById("loginErr").textContent = "密碼錯誤，請重新輸入";
+    return;
+  }
+  auth = pwd;
+  document.getElementById("loginSection").classList.add("hidden");
+  document.getElementById("dashboardSection").classList.remove("hidden");
+  loadResults();
+}
+
+/* ═══ LOAD RESULTS ═══ */
+async function loadResults() {
+  const type = document.getElementById("dType").value;
+  const grade = document.getElementById("dGrade").value;
+
+  const content = document.getElementById("resultsContent");
+  const chartsEl = document.getElementById("chartsContent");
+  content.innerHTML = '<div class="loading">載入中...</div>';
+  chartsEl.innerHTML = "";
+
+  try {
+    let url = `${API_BASE}/api/results?auth=${auth}&type=${type}`;
+    if (grade) url += `&grade=${grade}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (data.error) {
+      content.innerHTML = `<div class="empty-msg">錯誤：${data.error}</div>`;
+      return;
+    }
+
+    currentData = data;
+    renderOverview(data);
+    renderClassResults(data, type, grade);
+    renderCharts(data, type, grade);
+  } catch (e) {
+    content.innerHTML = `<div class="empty-msg">載入失敗：${e.message}</div>`;
+  }
+}
+
+/* ═══ OVERVIEW ═══ */
+function renderOverview(data) {
+  const grid = document.getElementById("statsGrid");
+  const agg = data.aggregated;
+
+  let totalStudents = agg.totalStudents || 0;
+  let overallAvg = 0;
+  const overall = agg.overall || {};
+  let qCount = 0;
+  for (const q of Object.values(overall)) {
+    overallAvg += q.average;
+    qCount++;
+  }
+  overallAvg = qCount > 0 ? (overallAvg / qCount).toFixed(2) : "—";
+
+  const classCount = Object.keys(agg.byClass || {}).length;
+
+  grid.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${totalStudents}</div><div class="stat-label">總回覆人數</div></div>
+    <div class="stat-card"><div class="stat-value">${overallAvg}</div><div class="stat-label">整體平均分</div></div>
+    <div class="stat-card"><div class="stat-value">${classCount}</div><div class="stat-label">班級數目</div></div>
+  `;
+}
+
+/* ═══ CLASS RESULTS TABLE ═══ */
+function renderClassResults(data, type, grade) {
+  const content = document.getElementById("resultsContent");
+  const agg = data.aggregated;
+  const byClass = agg.byClass || {};
+
+  if (Object.keys(byClass).length === 0) {
+    content.innerHTML = '<div class="empty-msg">暫無數據</div>';
+    return;
+  }
+
+  const questions = type === "student" && grade
+    ? QUESTIONS_TEXT.student[grade]
+    : QUESTIONS_TEXT.teacher;
+
+  let html = "";
+
+  // Overall table
+  html += `<h3 style="margin:12px 0 8px;font-size:0.95rem;">整體（全年級）</h3>`;
+  html += buildTable("overall", questions, agg.overall, agg.totalStudents);
+
+  // Per class
+  for (const [cls, cdata] of Object.entries(byClass)) {
+    html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">${grade || ""} ${cls} 班（${cdata.studentCount} 人）</h3>`;
+    html += buildTable(cls, questions, cdata.questions, cdata.studentCount);
+  }
+
+  content.innerHTML = html;
+}
+
+function buildTable(id, questions, qData, total) {
+  let html = `<table class="results-table"><thead><tr>`;
+  html += `<th>題目</th><th>平均分</th><th>5分</th><th>4分</th><th>3分</th><th>2分</th><th>1分</th>`;
+  html += `</tr></thead><tbody>`;
+
+  for (let i = 0; i < questions.length; i++) {
+    const q = qData[`Q${i+1}`];
+    if (!q) continue;
+    const d = q.distribution;
+    html += `<tr>`;
+    html += `<td style="text-align:left;font-size:0.85rem;">${questions[i]}</td>`;
+    html += `<td class="avg">${q.average.toFixed(2)}</td>`;
+    html += `<td class="score-5">${d[5]}</td>`;
+    html += `<td class="score-4">${d[4]}</td>`;
+    html += `<td class="score-3">${d[3]}</td>`;
+    html += `<td class="score-2">${d[2]}</td>`;
+    html += `<td class="score-1">${d[1]}</td>`;
+    html += `</tr>`;
+  }
+
+  html += `</tbody></table>`;
+  return html;
+}
+
+/* ═══ CHARTS ═══ */
+function renderCharts(data, type, grade) {
+  const el = document.getElementById("chartsContent");
+  const agg = data.aggregated;
+
+  // Destroy old charts
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+
+  const questions = type === "student" && grade
+    ? QUESTIONS_TEXT.student[grade]
+    : QUESTIONS_TEXT.teacher;
+
+  if (!questions) {
+    el.innerHTML = '<div class="empty-msg">請選擇年級以查看圖表</div>';
+    return;
+  }
+
+  // Overall stacked bar chart
+  let chartHtml = `<div class="chart-container" style="height:350px"><canvas id="chartOverall"></canvas></div>`;
+
+  // Per-class comparison
+  chartHtml += `<div class="chart-row">`;
+  questions.forEach((q, i) => {
+    chartHtml += `<div class="chart-container"><canvas id="chartQ${i}"></canvas></div>`;
+  });
+  chartHtml += `</div>`;
+
+  el.innerHTML = chartHtml;
+
+  // Draw overall chart
+  drawStackedBar("chartOverall", questions, agg.overall, `${grade || "全部"} 整體分佈`);
+
+  // Draw per-question comparison charts
+  const byClass = agg.byClass || {};
+  const classNames = Object.keys(byClass);
+
+  if (classNames.length > 0) {
+    questions.forEach((q, qi) => {
+      const averages = {};
+      classNames.forEach(cls => {
+        const qd = byClass[cls].questions[`Q${qi+1}`];
+        averages[cls] = qd ? qd.average : 0;
+      });
+      drawComparisonBar(`chartQ${qi}`, q, averages);
+    });
+  }
+}
+
+function drawStackedBar(canvasId, labels, qData, title) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+
+  const datasets = [];
+  const colors = { 5: "#16a34a", 4: "#65a30d", 3: "#f59e0b", 2: "#ea580c", 1: "#dc2626" };
+  const labelsMap = { 5: "非常同意", 4: "同意", 3: "普通", 2: "不同意", 1: "完全不同意" };
+
+  for (let score = 5; score >= 1; score--) {
+    datasets.push({
+      label: labelsMap[score],
+      data: labels.map((_, i) => {
+        const q = qData[`Q${i+1}`];
+        return q ? q.distribution[score] : 0;
+      }),
+      backgroundColor: colors[score],
+    });
+  }
+
+  charts[canvasId] = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { title: { display: true, text: title, font: { size: 14 } }, legend: { position: "bottom" } },
+      scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: "人數" } } },
+    },
+  });
+}
+
+function drawComparisonBar(canvasId, questionText, classAverages) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+
+  charts[canvasId] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(classAverages),
+      datasets: [{
+        label: "平均分",
+        data: Object.values(classAverages),
+        backgroundColor: "#3b82f6",
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: questionText, font: { size: 12 } },
+        legend: { display: false },
+      },
+      scales: { y: { min: 0, max: 5, title: { display: true, text: "平均分" } } },
+    },
+  });
+}
+
+/* ═══ CSV EXPORT ═══ */
+function exportCSV() {
+  const type = document.getElementById("dType").value;
+  window.open(`${API_BASE}/api/export?auth=${auth}`, "_blank");
+}
+</script>
+</body>
+</html>
