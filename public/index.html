@@ -24,14 +24,12 @@
   .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
   .form-group { flex: 1; min-width: 120px; }
   .form-group label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; font-weight: 600; }
-  select, input[type="number"] { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; background: white; transition: border-color 0.2s; }
+  select, input[type="number"], input[type="text"] { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; background: white; transition: border-color 0.2s; }
   select:focus, input:focus { outline: none; border-color: var(--primary); }
   .type-toggle { display: flex; background: var(--border); border-radius: 8px; padding: 3px; margin-bottom: 16px; }
   .type-toggle button { flex: 1; padding: 10px; border: none; background: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
   .type-toggle button.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
   .hidden { display: none !important; }
-
-  /* Question block with distribution input */
   .q-block { padding: 16px 20px; background: #f8fafc; border-radius: 10px; margin-bottom: 14px; border-left: 4px solid var(--primary); }
   .q-text { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; }
   .q-inputs { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
@@ -46,31 +44,27 @@
   .score-input input:focus { border-color: var(--primary); outline: none; }
   .q-subtotal { text-align: right; font-size: 0.8rem; color: var(--text-light); margin-top: 6px; }
   .q-subtotal.mismatch { color: var(--danger); font-weight: 600; }
-
-  /* Buttons */
   .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
   .btn-primary { background: var(--primary); color: white; }
-  .btn-primary:hover { background: var(--primary-dark); }
   .btn-success { background: var(--success); color: white; }
   .btn-success:hover { background: #15803d; }
   .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
   .btn-outline:hover { background: var(--primary-light); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-group { display: flex; gap: 12px; margin-top: 16px; }
-
-  /* Status */
   .status { padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; display: none; }
   .status.show { display: block; }
   .status.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
   .status.error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
-
-  /* Summary bar */
   .summary-bar { background: var(--primary-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
   .summary-bar strong { color: var(--primary); }
-
   .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
+  .teacher-info { background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.9rem; }
+  .teacher-info strong { color: #92400e; }
+  .admin-link { text-align: center; margin-top: 20px; }
+  .admin-link a { color: var(--text-light); font-size: 0.85rem; text-decoration: none; }
+  .admin-link a:hover { color: var(--primary); text-decoration: underline; }
   @media (max-width: 600px) {
     .container { padding: 12px; }
     .card { padding: 16px; }
@@ -95,36 +89,66 @@
     <button onclick="switchType('teacher')">教師問卷</button>
   </div>
 
-  <!-- Step 1: Grade & Class -->
+  <!-- Step 1: Info -->
   <div class="card">
-    <h2><span class="step">1</span> 選擇年級及班別</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label>年級</label>
-        <select id="selGrade" onchange="onSelectionChange()">
-          <option value="">-- 請選擇 --</option>
-          <option value="P1">小一 (P1)</option>
-          <option value="P2">小二 (P2)</option>
-          <option value="P3">小三 (P3)</option>
-          <option value="P4">小四 (P4)</option>
-          <option value="P5">小五 (P5)</option>
-          <option value="P6">小六 (P6)</option>
-        </select>
+    <h2><span class="step">1</span> <span id="step1Title">選擇年級及班別</span></h2>
+
+    <!-- Student mode fields -->
+    <div id="studentFields">
+      <div class="form-row">
+        <div class="form-group">
+          <label>年級</label>
+          <select id="selGrade" onchange="onSelectionChange()">
+            <option value="">-- 請選擇 --</option>
+            <option value="P1">小一 (P1)</option>
+            <option value="P2">小二 (P2)</option>
+            <option value="P3">小三 (P3)</option>
+            <option value="P4">小四 (P4)</option>
+            <option value="P5">小五 (P5)</option>
+            <option value="P6">小六 (P6)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>班別</label>
+          <select id="selClass" onchange="onSelectionChange()">
+            <option value="">-- 請選擇 --</option>
+            <option value="A">A 班</option>
+            <option value="B">B 班</option>
+            <option value="C">C 班</option>
+            <option value="D">D 班</option>
+          </select>
+        </div>
+        <div class="form-group" id="totalGroup">
+          <label>班級總人數</label>
+          <input type="number" id="totalStudents" min="1" max="45" value="" placeholder="例：30" oninput="onTotalChange()">
+        </div>
       </div>
-      <div class="form-group">
-        <label>班別</label>
-        <select id="selClass" onchange="onSelectionChange()">
-          <option value="">-- 請選擇 --</option>
-          <option value="A">A 班</option>
-          <option value="B">B 班</option>
-          <option value="C">C 班</option>
-          <option value="D">D 班</option>
-          <option value="E">E 班</option>
-        </select>
+    </div>
+
+    <!-- Teacher mode fields -->
+    <div id="teacherFields" class="hidden">
+      <div class="teacher-info">
+        <strong>教師問卷</strong>：請選擇您的教師代號，再選擇您評估的年級，然後填寫 5 題教師評估題目。
       </div>
-      <div class="form-group" id="totalGroup">
-        <label>班級總人數</label>
-        <input type="number" id="totalStudents" min="1" max="45" value="" placeholder="例：30" oninput="onTotalChange()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>教師代號</label>
+          <select id="selTeacher" onchange="onSelectionChange()">
+            <option value="">-- 請選擇 --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>評估年級</label>
+          <select id="selTeacherGrade" onchange="onSelectionChange()">
+            <option value="">-- 請選擇 --</option>
+            <option value="P1">小一 (P1)</option>
+            <option value="P2">小二 (P2)</option>
+            <option value="P3">小三 (P3)</option>
+            <option value="P4">小四 (P4)</option>
+            <option value="P5">小五 (P5)</option>
+            <option value="P6">小六 (P6)</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
@@ -134,7 +158,7 @@
     <h2><span class="step">2</span> <span id="qTitle">問題</span></h2>
     <div class="summary-bar">
       <span>請在下方每題輸入各同意程度的人數</span>
-      <span>每題小計應等於 <strong id="expectedTotal">—</strong> 人</span>
+      <span id="subtotalHint">每題小計應等於 <strong id="expectedTotal">—</strong> 人</span>
     </div>
     <div id="questionsArea"></div>
   </div>
@@ -149,6 +173,8 @@
     </div>
     <div class="status" id="submitStatus"></div>
   </div>
+
+  <div class="admin-link"><a href="/admin.html">管理後台 →</a></div>
 </div>
 
 <script>
@@ -166,9 +192,38 @@ const QUESTIONS = {
   teacher: ["STEAM 科課程有效提升學生的運算思維","騰訊 AI 平台適合用於課堂教學","STEAM DAY 活動有助學生理解科技與環保的關係","跨科整合能有效提升學生的學習動機","現有課程安排和資源足以支援教學需要"]
 };
 
+const TEACHERS = [
+  {code:"許",name:"許敏詩"},{code:"張",name:"張慧文"},{code:"瑞",name:"林瑞芳"},{code:"勞",name:"勞惠嫻"},
+  {code:"蕭",name:"蕭蕙欣"},{code:"林",name:"林美玲"},{code:"馮",name:"馮祉福"},{code:"梁",name:"梁建華"},
+  {code:"高",name:"高健倫"},{code:"龔",name:"龔凱凝"},{code:"蓓",name:"黃蓓琪"},{code:"婉",name:"陳婉儀"},
+  {code:"容",name:"吳永容"},{code:"瑤",name:"黃偉瑤"},{code:"鋒",name:"楊錦鋒"},{code:"美",name:"林美玲(美)"},
+  {code:"明",name:"高俊明"},{code:"楚",name:"張楚雯"},{code:"秋",name:"任秋彤"},{code:"映",name:"卓映彤"},
+  {code:"楊",name:"楊惠娟"},{code:"天",name:"李天恩"},{code:"軍",name:"李軍"},{code:"鑫",name:"蔡寶鑫"},
+  {code:"瑩",name:"郭雅瑩"},{code:"玟",name:"李玟欣"},{code:"雪",name:"陳雪儀"},{code:"卿",name:"潘美卿"},
+  {code:"耀",name:"伍梓耀"},{code:"茵",name:"范茵晴"},{code:"慧",name:"黃慧玲"},{code:"宜",name:"鄺家宜"},
+  {code:"淑",name:"凌淑佩"},{code:"芳",name:"李立秀"},{code:"嘉",name:"黃嘉慧"},{code:"施",name:"陳仲施"},
+  {code:"偉",name:"黃博偉"},{code:"琳",name:"霍曉琳"},{code:"婷",name:"鍾詩婷"},{code:"鳳",name:"何美鳳"},
+  {code:"敏",name:"黃思敏"},{code:"歡",name:"李龜歡"},{code:"荃",name:"陳佩荃"},{code:"珊",name:"蔡曉珊"},
+  {code:"蘇",name:"蘇美靜"},{code:"于",name:"任于敏"},{code:"媛",name:"香寶媛"},{code:"鄧",name:"鄧思義"},
+  {code:"碧",name:"曾碧瑩"},{code:"毅",name:"謝毅俊"},{code:"光",name:"許光耀"},{code:"穎",name:"陳穎欣"},
+  {code:"徐",name:"徐思敏"},{code:"倫",name:"李凱倫"},{code:"蔓",name:"呂詩蔓"},{code:"H",name:"HANIFE"},
+  {code:"君",name:"劉君慧"},{code:"珠",name:"劉慶珠"},{code:"古",name:"古明傑"}
+];
+
 const SCORE_LABELS = { 5: "非常同意", 4: "同意", 3: "普通", 2: "不同意", 1: "完全不同意" };
 
-let state = { type: "student", grade: "", className: "", totalStudents: 0, distributions: {} };
+let state = { type: "student", grade: "", className: "", totalStudents: 0, teacherCode: "", distributions: {} };
+
+/* ═══ INIT ═══ */
+(function init() {
+  const sel = document.getElementById("selTeacher");
+  TEACHERS.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.code;
+    opt.textContent = `${t.code} — ${t.name}`;
+    sel.appendChild(opt);
+  });
+})();
 
 /* ═══ TYPE SWITCH ═══ */
 function switchType(type) {
@@ -176,29 +231,46 @@ function switchType(type) {
   document.querySelectorAll(".type-toggle button").forEach((b, i) => {
     b.classList.toggle("active", (i === 0 && type === "student") || (i === 1 && type === "teacher"));
   });
-  document.getElementById("totalGroup").classList.toggle("hidden", type === "teacher");
+  document.getElementById("studentFields").classList.toggle("hidden", type === "teacher");
+  document.getElementById("teacherFields").classList.toggle("hidden", type === "student");
+  document.getElementById("step1Title").textContent = type === "student" ? "選擇年級及班別" : "教師資料";
+  document.getElementById("subtotalHint").classList.toggle("hidden", type === "teacher");
   onSelectionChange();
 }
 
 /* ═══ SELECTION CHANGE ═══ */
 function onSelectionChange() {
-  state.grade = document.getElementById("selGrade").value;
-  state.className = document.getElementById("selClass").value;
-  state.totalStudents = parseInt(document.getElementById("totalStudents").value) || 0;
   state.distributions = {};
 
-  if (!state.grade || !state.className) {
-    document.getElementById("questionsCard").classList.add("hidden");
-    document.getElementById("submitCard").classList.add("hidden");
-    return;
+  if (state.type === "student") {
+    state.grade = document.getElementById("selGrade").value;
+    state.className = document.getElementById("selClass").value;
+    state.totalStudents = parseInt(document.getElementById("totalStudents").value) || 0;
+    state.teacherCode = "";
+    if (!state.grade || !state.className) { hideForm(); return; }
+  } else {
+    state.teacherCode = document.getElementById("selTeacher").value;
+    state.grade = document.getElementById("selTeacherGrade").value;
+    state.className = "";
+    state.totalStudents = 0;
+    if (!state.teacherCode || !state.grade) { hideForm(); return; }
   }
 
+  showForm();
+}
+
+function hideForm() {
+  document.getElementById("questionsCard").classList.add("hidden");
+  document.getElementById("submitCard").classList.add("hidden");
+}
+
+function showForm() {
   document.getElementById("questionsCard").classList.remove("hidden");
   document.getElementById("submitCard").classList.remove("hidden");
 
   const questions = state.type === "student" ? QUESTIONS.student[state.grade] : QUESTIONS.teacher;
-  document.getElementById("qTitle").textContent =
-    state.type === "student" ? `${state.grade} 學生問卷題目` : "教師問卷題目（全校通用）";
+  const title = state.type === "student" ? `${state.grade} 學生問卷題目` : `教師問卷（評估 ${state.grade}）`;
+  document.getElementById("qTitle").textContent = title;
   document.getElementById("expectedTotal").textContent = state.totalStudents || "—";
 
   questions.forEach((_, i) => {
@@ -215,23 +287,17 @@ function onTotalChange() {
   updateSubtotals();
 }
 
-/* ═══ RENDER QUESTIONS ═══ */
+/* ═══ RENDER ═══ */
 function renderQuestions(questions) {
   let html = "";
   questions.forEach((q, i) => {
     const qKey = `Q${i+1}`;
-    html += `<div class="q-block">`;
-    html += `<div class="q-text">${qKey}. ${q}</div>`;
-    html += `<div class="q-inputs">`;
+    html += `<div class="q-block"><div class="q-text">${qKey}. ${q}</div><div class="q-inputs">`;
     for (let s = 5; s >= 1; s--) {
-      html += `<div class="score-input">`;
-      html += `<span class="score-label s${s}">${s}分 ${SCORE_LABELS[s]}</span>`;
-      html += `<input type="number" min="0" max="45" value="0" id="${qKey}_${s}" oninput="onScoreInput('${qKey}',${s},this.value)">`;
-      html += `</div>`;
+      html += `<div class="score-input"><span class="score-label s${s}">${s}分 ${SCORE_LABELS[s]}</span>`;
+      html += `<input type="number" min="0" max="45" value="0" id="${qKey}_${s}" oninput="onScoreInput('${qKey}',${s},this.value)"></div>`;
     }
-    html += `</div>`;
-    html += `<div class="q-subtotal" id="sub_${qKey}">小計：0 人</div>`;
-    html += `</div>`;
+    html += `</div><div class="q-subtotal" id="sub_${qKey}">小計：0 人</div></div>`;
   });
   document.getElementById("questionsArea").innerHTML = html;
 }
@@ -244,34 +310,30 @@ function onScoreInput(qKey, score, val) {
 
 function updateSubtotals() {
   const total = state.totalStudents;
-  let allOk = true;
   for (const [qKey, dist] of Object.entries(state.distributions)) {
     const sub = Object.values(dist).reduce((a, b) => a + b, 0);
     const el = document.getElementById(`sub_${qKey}`);
-    if (total > 0 && sub !== total) {
+    if (state.type === "student" && total > 0 && sub !== total) {
       el.textContent = `小計：${sub} 人（應為 ${total} 人）`;
       el.className = "q-subtotal mismatch";
-      allOk = false;
     } else {
       el.textContent = `小計：${sub} 人`;
       el.className = "q-subtotal";
     }
   }
-  return allOk;
 }
 
 function updateSummary() {
   const questions = state.type === "student" ? QUESTIONS.student[state.grade] : QUESTIONS.teacher;
   const filled = Object.values(state.distributions).filter(d => Object.values(d).some(v => v > 0)).length;
-  document.getElementById("submitSummary").textContent =
-    `${state.grade} ${state.className}班 — 已填寫 ${filled}/${questions.length} 題`;
+  const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師（${state.grade}）`;
+  document.getElementById("submitSummary").textContent = `${who} — 已填寫 ${filled}/${questions.length} 題`;
 }
 
 /* ═══ SUBMIT ═══ */
 async function submitSurvey() {
   const btn = document.getElementById("submitBtn");
   const status = document.getElementById("submitStatus");
-  const questions = state.type === "student" ? QUESTIONS.student[state.grade] : QUESTIONS.teacher;
 
   const empty = Object.entries(state.distributions).filter(([_, d]) => Object.values(d).every(v => v === 0));
   if (empty.length > 0) {
@@ -280,9 +342,9 @@ async function submitSurvey() {
   }
 
   if (state.type === "student" && state.totalStudents > 0) {
-    const mismatched = Object.entries(state.distributions).filter(([_, d]) => {
-      return Object.values(d).reduce((a, b) => a + b, 0) !== state.totalStudents;
-    });
+    const mismatched = Object.entries(state.distributions).filter(([_, d]) =>
+      Object.values(d).reduce((a, b) => a + b, 0) !== state.totalStudents
+    );
     if (mismatched.length > 0) {
       showStatus(status, "error", `有 ${mismatched.length} 題的人數小計不等於班級總人數（${state.totalStudents}），請檢查。`);
       return;
@@ -293,20 +355,24 @@ async function submitSurvey() {
   btn.innerHTML = '<span class="spinner"></span>提交中...';
 
   try {
+    const body = {
+      grade: state.grade,
+      type: state.type,
+      questions: state.distributions,
+      totalStudents: state.type === "student" ? state.totalStudents : 1,
+    };
+    if (state.type === "student") body.className = state.className;
+    if (state.type === "teacher") body.teacherCode = state.teacherCode;
+
     const resp = await fetch(`${API_BASE}/api/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grade: state.grade,
-        className: state.className,
-        type: state.type,
-        totalStudents: state.type === "student" ? state.totalStudents : 1,
-        questions: state.distributions,
-      }),
+      body: JSON.stringify(body),
     });
     const data = await resp.json();
     if (data.success) {
-      showStatus(status, "success", `成功提交 ${state.grade} ${state.className}班 的問卷結果！`);
+      const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師（${state.grade}）`;
+      showStatus(status, "success", `成功提交 ${who} 的問卷結果！`);
     } else {
       showStatus(status, "error", "提交失敗：" + (data.error || "未知錯誤"));
     }
@@ -324,7 +390,7 @@ function showStatus(el, type, msg) {
 }
 
 function resetAll() {
-  if (!confirm("確定要重新填寫嗎？所有未提交的資料將會清除。")) return;
+  if (!confirm("確定要重新填寫嗎？")) return;
   onSelectionChange();
 }
 </script>
