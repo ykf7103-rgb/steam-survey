@@ -30,21 +30,9 @@ const QUESTIONS = {
 };
 
 const TEACHERS = [
-  {code:"許",name:"許敏詩"},{code:"張",name:"張慧文"},{code:"瑞",name:"林瑞芳"},{code:"勞",name:"勞惠嫻"},
-  {code:"蕭",name:"蕭蕙欣"},{code:"林",name:"林美玲"},{code:"馮",name:"馮祉福"},{code:"梁",name:"梁建華"},
-  {code:"高",name:"高健倫"},{code:"龔",name:"龔凱凝"},{code:"蓓",name:"黃蓓琪"},{code:"婉",name:"陳婉儀"},
-  {code:"容",name:"吳永容"},{code:"瑤",name:"黃偉瑤"},{code:"鋒",name:"楊錦鋒"},{code:"美",name:"林美玲(美)"},
-  {code:"明",name:"高俊明"},{code:"楚",name:"張楚雯"},{code:"秋",name:"任秋彤"},{code:"映",name:"卓映彤"},
-  {code:"楊",name:"楊惠娟"},{code:"天",name:"李天恩"},{code:"軍",name:"李軍"},{code:"鑫",name:"蔡寶鑫"},
-  {code:"瑩",name:"郭雅瑩"},{code:"玟",name:"李玟欣"},{code:"雪",name:"陳雪儀"},{code:"卿",name:"潘美卿"},
-  {code:"耀",name:"伍梓耀"},{code:"茵",name:"范茵晴"},{code:"慧",name:"黃慧玲"},{code:"宜",name:"鄺家宜"},
-  {code:"淑",name:"凌淑佩"},{code:"芳",name:"李立秀"},{code:"嘉",name:"黃嘉慧"},{code:"施",name:"陳仲施"},
-  {code:"偉",name:"黃博偉"},{code:"琳",name:"霍曉琳"},{code:"婷",name:"鍾詩婷"},{code:"鳳",name:"何美鳳"},
-  {code:"敏",name:"黃思敏"},{code:"歡",name:"李龜歡"},{code:"荃",name:"陳佩荃"},{code:"珊",name:"蔡曉珊"},
-  {code:"蘇",name:"蘇美靜"},{code:"于",name:"任于敏"},{code:"媛",name:"香寶媛"},{code:"鄧",name:"鄧思義"},
-  {code:"碧",name:"曾碧瑩"},{code:"毅",name:"謝毅俊"},{code:"光",name:"許光耀"},{code:"穎",name:"陳穎欣"},
-  {code:"徐",name:"徐思敏"},{code:"倫",name:"李凱倫"},{code:"蔓",name:"呂詩蔓"},{code:"H",name:"HANIFE"},
-  {code:"君",name:"劉君慧"},{code:"珠",name:"劉慶珠"},{code:"古",name:"古明傑"}
+  {code:"鋒",name:"楊錦鋒"},{code:"蕭",name:"蕭蕙欣"},{code:"高",name:"高健倫"},{code:"梁",name:"梁建華"},
+  {code:"鄧",name:"鄧思義"},{code:"瑤",name:"黃偉瑤"},{code:"容",name:"吳永容"},{code:"偉",name:"黃博偉"},
+  {code:"婷",name:"鍾詩婷"},{code:"軍",name:"李軍"},{code:"鳳",name:"何美鳳"},{code:"卿",name:"潘美卿"},
 ];
 
 function json(data, status = 200) {
@@ -161,14 +149,17 @@ export async function onRequest(context) {
     if (subPath === "/submit" && request.method === "POST") {
       const body = await request.json();
       const { grade, className, type, totalStudents, questions, teacherCode } = body;
-      if (!grade || !type || !questions) {
-        return json({ error: "Missing fields: grade, type, questions" }, 400);
+      if (!type || !questions) {
+        return json({ error: "Missing fields: type, questions" }, 400);
+      }
+      if (type === "student" && !grade) {
+        return json({ error: "Student survey requires grade" }, 400);
       }
 
       const id = crypto.randomUUID();
       const record = {
         id,
-        grade,
+        grade: grade || "",
         className: className || (teacherCode ? "teacher" : ""),
         type,
         totalStudents: totalStudents || 0,

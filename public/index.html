@@ -128,25 +128,13 @@
     <!-- Teacher mode fields -->
     <div id="teacherFields" class="hidden">
       <div class="teacher-info">
-        <strong>教師問卷</strong>：請選擇您的教師代號，再選擇您評估的年級，然後填寫 5 題教師評估題目。
+        <strong>教師問卷</strong>：請選擇您的教師代號，然後填寫 5 題評估題目。
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>教師代號</label>
           <select id="selTeacher" onchange="onSelectionChange()">
             <option value="">-- 請選擇 --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>評估年級</label>
-          <select id="selTeacherGrade" onchange="onSelectionChange()">
-            <option value="">-- 請選擇 --</option>
-            <option value="P1">小一 (P1)</option>
-            <option value="P2">小二 (P2)</option>
-            <option value="P3">小三 (P3)</option>
-            <option value="P4">小四 (P4)</option>
-            <option value="P5">小五 (P5)</option>
-            <option value="P6">小六 (P6)</option>
           </select>
         </div>
       </div>
@@ -193,21 +181,9 @@ const QUESTIONS = {
 };
 
 const TEACHERS = [
-  {code:"許",name:"許敏詩"},{code:"張",name:"張慧文"},{code:"瑞",name:"林瑞芳"},{code:"勞",name:"勞惠嫻"},
-  {code:"蕭",name:"蕭蕙欣"},{code:"林",name:"林美玲"},{code:"馮",name:"馮祉福"},{code:"梁",name:"梁建華"},
-  {code:"高",name:"高健倫"},{code:"龔",name:"龔凱凝"},{code:"蓓",name:"黃蓓琪"},{code:"婉",name:"陳婉儀"},
-  {code:"容",name:"吳永容"},{code:"瑤",name:"黃偉瑤"},{code:"鋒",name:"楊錦鋒"},{code:"美",name:"林美玲(美)"},
-  {code:"明",name:"高俊明"},{code:"楚",name:"張楚雯"},{code:"秋",name:"任秋彤"},{code:"映",name:"卓映彤"},
-  {code:"楊",name:"楊惠娟"},{code:"天",name:"李天恩"},{code:"軍",name:"李軍"},{code:"鑫",name:"蔡寶鑫"},
-  {code:"瑩",name:"郭雅瑩"},{code:"玟",name:"李玟欣"},{code:"雪",name:"陳雪儀"},{code:"卿",name:"潘美卿"},
-  {code:"耀",name:"伍梓耀"},{code:"茵",name:"范茵晴"},{code:"慧",name:"黃慧玲"},{code:"宜",name:"鄺家宜"},
-  {code:"淑",name:"凌淑佩"},{code:"芳",name:"李立秀"},{code:"嘉",name:"黃嘉慧"},{code:"施",name:"陳仲施"},
-  {code:"偉",name:"黃博偉"},{code:"琳",name:"霍曉琳"},{code:"婷",name:"鍾詩婷"},{code:"鳳",name:"何美鳳"},
-  {code:"敏",name:"黃思敏"},{code:"歡",name:"李龜歡"},{code:"荃",name:"陳佩荃"},{code:"珊",name:"蔡曉珊"},
-  {code:"蘇",name:"蘇美靜"},{code:"于",name:"任于敏"},{code:"媛",name:"香寶媛"},{code:"鄧",name:"鄧思義"},
-  {code:"碧",name:"曾碧瑩"},{code:"毅",name:"謝毅俊"},{code:"光",name:"許光耀"},{code:"穎",name:"陳穎欣"},
-  {code:"徐",name:"徐思敏"},{code:"倫",name:"李凱倫"},{code:"蔓",name:"呂詩蔓"},{code:"H",name:"HANIFE"},
-  {code:"君",name:"劉君慧"},{code:"珠",name:"劉慶珠"},{code:"古",name:"古明傑"}
+  {code:"鋒",name:"楊錦鋒"},{code:"蕭",name:"蕭蕙欣"},{code:"高",name:"高健倫"},{code:"梁",name:"梁建華"},
+  {code:"鄧",name:"鄧思義"},{code:"瑤",name:"黃偉瑤"},{code:"容",name:"吳永容"},{code:"偉",name:"黃博偉"},
+  {code:"婷",name:"鍾詩婷"},{code:"軍",name:"李軍"},{code:"鳳",name:"何美鳳"},{code:"卿",name:"潘美卿"},
 ];
 
 const SCORE_LABELS = { 5: "非常同意", 4: "同意", 3: "普通", 2: "不同意", 1: "完全不同意" };
@@ -220,7 +196,7 @@ let state = { type: "student", grade: "", className: "", totalStudents: 0, teach
   TEACHERS.forEach(t => {
     const opt = document.createElement("option");
     opt.value = t.code;
-    opt.textContent = `${t.code} — ${t.name}`;
+    opt.textContent = t.code;
     sel.appendChild(opt);
   });
 })();
@@ -250,10 +226,10 @@ function onSelectionChange() {
     if (!state.grade || !state.className) { hideForm(); return; }
   } else {
     state.teacherCode = document.getElementById("selTeacher").value;
-    state.grade = document.getElementById("selTeacherGrade").value;
+    state.grade = "";
     state.className = "";
     state.totalStudents = 0;
-    if (!state.teacherCode || !state.grade) { hideForm(); return; }
+    if (!state.teacherCode) { hideForm(); return; }
   }
 
   showForm();
@@ -269,7 +245,7 @@ function showForm() {
   document.getElementById("submitCard").classList.remove("hidden");
 
   const questions = state.type === "student" ? QUESTIONS.student[state.grade] : QUESTIONS.teacher;
-  const title = state.type === "student" ? `${state.grade} 學生問卷題目` : `教師問卷（評估 ${state.grade}）`;
+  const title = state.type === "student" ? `${state.grade} 學生問卷題目` : `教師問卷題目`;
   document.getElementById("qTitle").textContent = title;
   document.getElementById("expectedTotal").textContent = state.totalStudents || "—";
 
@@ -326,7 +302,7 @@ function updateSubtotals() {
 function updateSummary() {
   const questions = state.type === "student" ? QUESTIONS.student[state.grade] : QUESTIONS.teacher;
   const filled = Object.values(state.distributions).filter(d => Object.values(d).some(v => v > 0)).length;
-  const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師（${state.grade}）`;
+  const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師`;
   document.getElementById("submitSummary").textContent = `${who} — 已填寫 ${filled}/${questions.length} 題`;
 }
 
@@ -356,12 +332,11 @@ async function submitSurvey() {
 
   try {
     const body = {
-      grade: state.grade,
       type: state.type,
       questions: state.distributions,
       totalStudents: state.type === "student" ? state.totalStudents : 1,
     };
-    if (state.type === "student") body.className = state.className;
+    if (state.type === "student") { body.grade = state.grade; body.className = state.className; }
     if (state.type === "teacher") body.teacherCode = state.teacherCode;
 
     const resp = await fetch(`${API_BASE}/api/submit`, {
@@ -371,7 +346,7 @@ async function submitSurvey() {
     });
     const data = await resp.json();
     if (data.success) {
-      const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師（${state.grade}）`;
+      const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師`;
       showStatus(status, "success", `成功提交 ${who} 的問卷結果！`);
     } else {
       showStatus(status, "error", "提交失敗：" + (data.error || "未知錯誤"));

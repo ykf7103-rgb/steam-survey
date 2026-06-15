@@ -179,21 +179,9 @@ const QUESTIONS_TEXT = {
 };
 
 const TEACHERS = [
-  {code:"許",name:"許敏詩"},{code:"張",name:"張慧文"},{code:"瑞",name:"林瑞芳"},{code:"勞",name:"勞惠嫻"},
-  {code:"蕭",name:"蕭蕙欣"},{code:"林",name:"林美玲"},{code:"馮",name:"馮祉福"},{code:"梁",name:"梁建華"},
-  {code:"高",name:"高健倫"},{code:"龔",name:"龔凱凝"},{code:"蓓",name:"黃蓓琪"},{code:"婉",name:"陳婉儀"},
-  {code:"容",name:"吳永容"},{code:"瑤",name:"黃偉瑤"},{code:"鋒",name:"楊錦鋒"},{code:"美",name:"林美玲(美)"},
-  {code:"明",name:"高俊明"},{code:"楚",name:"張楚雯"},{code:"秋",name:"任秋彤"},{code:"映",name:"卓映彤"},
-  {code:"楊",name:"楊惠娟"},{code:"天",name:"李天恩"},{code:"軍",name:"李軍"},{code:"鑫",name:"蔡寶鑫"},
-  {code:"瑩",name:"郭雅瑩"},{code:"玟",name:"李玟欣"},{code:"雪",name:"陳雪儀"},{code:"卿",name:"潘美卿"},
-  {code:"耀",name:"伍梓耀"},{code:"茵",name:"范茵晴"},{code:"慧",name:"黃慧玲"},{code:"宜",name:"鄺家宜"},
-  {code:"淑",name:"凌淑佩"},{code:"芳",name:"李立秀"},{code:"嘉",name:"黃嘉慧"},{code:"施",name:"陳仲施"},
-  {code:"偉",name:"黃博偉"},{code:"琳",name:"霍曉琳"},{code:"婷",name:"鍾詩婷"},{code:"鳳",name:"何美鳳"},
-  {code:"敏",name:"黃思敏"},{code:"歡",name:"李龜歡"},{code:"荃",name:"陳佩荃"},{code:"珊",name:"蔡曉珊"},
-  {code:"蘇",name:"蘇美靜"},{code:"于",name:"任于敏"},{code:"媛",name:"香寶媛"},{code:"鄧",name:"鄧思義"},
-  {code:"碧",name:"曾碧瑩"},{code:"毅",name:"謝毅俊"},{code:"光",name:"許光耀"},{code:"穎",name:"陳穎欣"},
-  {code:"徐",name:"徐思敏"},{code:"倫",name:"李凱倫"},{code:"蔓",name:"呂詩蔓"},{code:"H",name:"HANIFE"},
-  {code:"君",name:"劉君慧"},{code:"珠",name:"劉慶珠"},{code:"古",name:"古明傑"}
+  {code:"鋒",name:"楊錦鋒"},{code:"蕭",name:"蕭蕙欣"},{code:"高",name:"高健倫"},{code:"梁",name:"梁建華"},
+  {code:"鄧",name:"鄧思義"},{code:"瑤",name:"黃偉瑤"},{code:"容",name:"吳永容"},{code:"偉",name:"黃博偉"},
+  {code:"婷",name:"鍾詩婷"},{code:"軍",name:"李軍"},{code:"鳳",name:"何美鳳"},{code:"卿",name:"潘美卿"},
 ];
 
 function teacherName(code) {
@@ -235,7 +223,7 @@ async function loadResults() {
 
   try {
     let url = `${API_BASE}/api/results?auth=${auth}&type=${type}`;
-    if (grade) url += `&grade=${grade}`;
+    if (grade && type === "student") url += `&grade=${grade}`;
     const resp = await fetch(url);
     const data = await resp.json();
 
@@ -302,20 +290,57 @@ function renderClassResults(data, type, grade) {
   html += `<h3 style="margin:12px 0 8px;font-size:0.95rem;">整體（${type === "teacher" ? "所有教師" : "全年級"}）</h3>`;
   html += buildTable("overall", questions, agg.overall, agg.totalStudents);
 
-  // Per class / per teacher
-  for (const [cls, cdata] of Object.entries(byClass)) {
-    if (type === "teacher") {
-      // For teacher type, cls is "teacher" — find teacher codes from raw data
-      const teacherEntries = (data.results || []).filter(r => r.className === cls);
-      const teacherNames = teacherEntries.map(r => r.teacherCode ? `${teacherName(r.teacherCode)}（${r.teacherCode}）` : "未知").join("、");
-      html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">教師提交（${cdata.studentCount} 份）：${teacherNames || ""}</h3>`;
-    } else {
-      html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">${grade || ""} ${cls} 班（${cdata.studentCount} 人）</h3>`;
+  if (type === "teacher") {
+    // Re-aggregate by teacher code
+    const byTeacher = {};
+    (data.results || []).forEach(r => {
+      const code = r.teacherCode || "未知";
+      if (!byTeacher[code]) byTeacher[code] = [];
+      byTeacher[code].push(r);
+    });
+
+    for (const [code, items] of Object.entries(byTeacher)) {
+      const tAgg = aggregateClient(items);
+      html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">${code} 老師</h3>`;
+      html += buildTable(code, questions, tAgg.overall, tAgg.totalStudents);
     }
-    html += buildTable(cls, questions, cdata.questions, cdata.studentCount);
+  } else {
+    // Per class
+    for (const [cls, cdata] of Object.entries(byClass)) {
+      html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">${grade || ""} ${cls} 班（${cdata.studentCount} 人）</h3>`;
+      html += buildTable(cls, questions, cdata.questions, cdata.studentCount);
+    }
   }
 
   content.innerHTML = html;
+}
+
+/* Client-side aggregation for teacher per-code view */
+function aggregateClient(results) {
+  const overall = {};
+  let totalStudents = 0;
+  for (let q = 0; q < 5; q++) {
+    const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let sum = 0, count = 0;
+    for (const r of results) {
+      const qData = r.questions?.[`Q${q+1}`];
+      if (qData) {
+        for (let s = 1; s <= 5; s++) {
+          const n = Number(qData[s]) || 0;
+          dist[s] += n;
+          sum += s * n;
+          count += n;
+        }
+      }
+    }
+    if (q === 0) totalStudents = count;
+    overall[`Q${q+1}`] = {
+      distribution: dist,
+      average: count > 0 ? Math.round((sum / count) * 100) / 100 : 0,
+      totalResponses: count,
+    };
+  }
+  return { overall, totalStudents };
 }
 
 function buildTable(id, questions, qData, total) {
@@ -351,7 +376,8 @@ function renderRawData(results, type, grade) {
   }
 
   let html = `<table class="raw-table"><thead><tr>`;
-  html += `<th>#</th><th>年級</th><th>班別</th>`;
+  html += `<th>#</th>`;
+  if (type === "student") html += `<th>年級</th><th>班別</th>`;
   if (type === "teacher") html += `<th>教師代號</th>`;
   html += `<th>總人數</th><th>提交時間</th>`;
   for (let i = 1; i <= 5; i++) html += `<th>Q${i} 平均</th>`;
@@ -361,10 +387,12 @@ function renderRawData(results, type, grade) {
     const ts = r.timestamp ? new Date(r.timestamp).toLocaleString("zh-HK", {timeZone:"Asia/Hong_Kong"}) : "";
     html += `<tr>`;
     html += `<td>${idx + 1}</td>`;
-    html += `<td>${r.grade}</td>`;
-    html += `<td>${r.className === "teacher" ? "教師" : r.className}</td>`;
+    if (type === "student") {
+      html += `<td>${r.grade}</td>`;
+      html += `<td>${r.className === "teacher" ? "教師" : r.className}</td>`;
+    }
     if (type === "teacher") {
-      html += `<td class="teacher-code">${r.teacherCode ? teacherName(r.teacherCode) + "（" + r.teacherCode + "）" : "—"}</td>`;
+      html += `<td class="teacher-code">${r.teacherCode || "—"}</td>`;
     }
     html += `<td>${r.totalStudents || "—"}</td>`;
     html += `<td style="font-size:0.78rem">${ts}</td>`;
@@ -401,9 +429,10 @@ function renderCharts(data, type, grade) {
   }
 
   // Overall stacked bar chart
+  const titleText = type === "teacher" ? "教師整體分佈" : `${grade || "全部"} 整體分佈`;
   let chartHtml = `<div class="chart-container" style="height:350px"><canvas id="chartOverall"></canvas></div>`;
 
-  // Per-class comparison
+  // Per-class/teacher comparison
   chartHtml += `<div class="chart-row">`;
   questions.forEach((q, i) => {
     chartHtml += `<div class="chart-container"><canvas id="chartQ${i}"></canvas></div>`;
@@ -413,21 +442,43 @@ function renderCharts(data, type, grade) {
   el.innerHTML = chartHtml;
 
   // Draw overall chart
-  drawStackedBar("chartOverall", questions, agg.overall, `${grade || "全部"} 整體分佈`);
+  drawStackedBar("chartOverall", questions, agg.overall, titleText);
 
   // Draw per-question comparison charts
-  const byClass = agg.byClass || {};
-  const classNames = Object.keys(byClass);
-
-  if (classNames.length > 0) {
-    questions.forEach((q, qi) => {
-      const averages = {};
-      classNames.forEach(cls => {
-        const qd = byClass[cls].questions[`Q${qi+1}`];
-        averages[cls] = qd ? qd.average : 0;
-      });
-      drawComparisonBar(`chartQ${qi}`, q, averages);
+  if (type === "teacher") {
+    // Group by teacher code
+    const byTeacher = {};
+    (data.results || []).forEach(r => {
+      const code = r.teacherCode || "未知";
+      if (!byTeacher[code]) byTeacher[code] = [];
+      byTeacher[code].push(r);
     });
+
+    if (Object.keys(byTeacher).length > 1) {
+      questions.forEach((q, qi) => {
+        const averages = {};
+        for (const [code, items] of Object.entries(byTeacher)) {
+          const tAgg = aggregateClient(items);
+          const qd = tAgg.overall[`Q${qi+1}`];
+          averages[code] = qd ? qd.average : 0;
+        }
+        drawComparisonBar(`chartQ${qi}`, q, averages);
+      });
+    }
+  } else {
+    const byClass = agg.byClass || {};
+    const classNames = Object.keys(byClass);
+
+    if (classNames.length > 0) {
+      questions.forEach((q, qi) => {
+        const averages = {};
+        classNames.forEach(cls => {
+          const qd = byClass[cls].questions[`Q${qi+1}`];
+          averages[cls] = qd ? qd.average : 0;
+        });
+        drawComparisonBar(`chartQ${qi}`, q, averages);
+      });
+    }
   }
 }
 
@@ -505,40 +556,57 @@ function exportExcel() {
   const wb = XLSX.utils.book_new();
 
   // --- Sheet 1: 原始數據 ---
-  const rawHeader = ["年級", "班別", "類型", "教師代號", "教師姓名", "總人數", "提交時間"];
-  for (let i = 1; i <= 5; i++) {
-    rawHeader.push(`Q${i}-5分`, `Q${i}-4分`, `Q${i}-3分`, `Q${i}-2分`, `Q${i}-1分`, `Q${i}-平均分`);
-  }
-
-  const rawRows = currentRaw.map(r => {
-    const row = [
-      r.grade,
-      r.className === "teacher" ? "教師" : r.className,
-      r.type === "student" ? "學生" : "教師",
-      r.teacherCode || "",
-      teacherName(r.teacherCode),
-      r.totalStudents || "",
-      r.timestamp ? new Date(r.timestamp).toLocaleString("zh-HK", {timeZone:"Asia/Hong_Kong"}) : ""
-    ];
+  let rawHeader, rawRows;
+  if (type === "teacher") {
+    rawHeader = ["教師代號", "類型", "總人數", "提交時間"];
     for (let i = 1; i <= 5; i++) {
-      const qd = r.questions?.[`Q${i}`] || {};
-      row.push(qd[5] || 0, qd[4] || 0, qd[3] || 0, qd[2] || 0, qd[1] || 0);
-      let sum = 0, cnt = 0;
-      for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
-      row.push(cnt > 0 ? Math.round((sum / cnt) * 100) / 100 : "");
+      rawHeader.push(`Q${i}-5分`, `Q${i}-4分`, `Q${i}-3分`, `Q${i}-2分`, `Q${i}-1分`, `Q${i}-平均分`);
     }
-    return row;
-  });
+    rawRows = currentRaw.map(r => {
+      const row = [
+        r.teacherCode || "",
+        "教師",
+        r.totalStudents || "",
+        r.timestamp ? new Date(r.timestamp).toLocaleString("zh-HK", {timeZone:"Asia/Hong_Kong"}) : ""
+      ];
+      for (let i = 1; i <= 5; i++) {
+        const qd = r.questions?.[`Q${i}`] || {};
+        row.push(qd[5] || 0, qd[4] || 0, qd[3] || 0, qd[2] || 0, qd[1] || 0);
+        let sum = 0, cnt = 0;
+        for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
+        row.push(cnt > 0 ? Math.round((sum / cnt) * 100) / 100 : "");
+      }
+      return row;
+    });
+  } else {
+    rawHeader = ["年級", "班別", "類型", "總人數", "提交時間"];
+    for (let i = 1; i <= 5; i++) {
+      rawHeader.push(`Q${i}-5分`, `Q${i}-4分`, `Q${i}-3分`, `Q${i}-2分`, `Q${i}-1分`, `Q${i}-平均分`);
+    }
+    rawRows = currentRaw.map(r => {
+      const row = [
+        r.grade,
+        r.className,
+        "學生",
+        r.totalStudents || "",
+        r.timestamp ? new Date(r.timestamp).toLocaleString("zh-HK", {timeZone:"Asia/Hong_Kong"}) : ""
+      ];
+      for (let i = 1; i <= 5; i++) {
+        const qd = r.questions?.[`Q${i}`] || {};
+        row.push(qd[5] || 0, qd[4] || 0, qd[3] || 0, qd[2] || 0, qd[1] || 0);
+        let sum = 0, cnt = 0;
+        for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
+        row.push(cnt > 0 ? Math.round((sum / cnt) * 100) / 100 : "");
+      }
+      return row;
+    });
+  }
 
   const ws1Data = [rawHeader, ...rawRows];
   const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-
-  // Column widths
-  ws1["!cols"] = [
-    {wch:6},{wch:8},{wch:6},{wch:8},{wch:10},{wch:8},{wch:20},
-    ...Array(30).fill({wch:8})
-  ];
-
+  ws1["!cols"] = type === "teacher"
+    ? [{wch:10},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})]
+    : [{wch:6},{wch:8},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})];
   XLSX.utils.book_append_sheet(wb, ws1, "原始數據");
 
   // --- Sheet 2: 匯總統計 ---
@@ -549,7 +617,6 @@ function exportExcel() {
       : QUESTIONS_TEXT.teacher;
 
     if (questions) {
-      // Overall summary
       const summaryHeader = ["分類", "題目", "平均分", "5分人數", "4分人數", "3分人數", "2分人數", "1分人數", "總人數"];
       const summaryRows = [];
 
@@ -558,27 +625,47 @@ function exportExcel() {
         const q = agg.overall[`Q${i+1}`];
         if (!q) continue;
         summaryRows.push([
-          "整體",
-          questions[i],
-          q.average,
+          type === "teacher" ? "全體教師" : "整體",
+          questions[i], q.average,
           q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
           q.totalResponses
         ]);
       }
 
-      // Per class
-      for (const [cls, cdata] of Object.entries(agg.byClass || {})) {
-        const label = cls === "teacher" ? "教師" : `${grade || ""} ${cls}班`;
-        for (let i = 0; i < questions.length; i++) {
-          const q = cdata.questions[`Q${i+1}`];
-          if (!q) continue;
-          summaryRows.push([
-            label,
-            questions[i],
-            q.average,
-            q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
-            q.totalResponses
-          ]);
+      if (type === "teacher") {
+        // Per teacher code
+        const byTeacher = {};
+        currentRaw.forEach(r => {
+          const code = r.teacherCode || "未知";
+          if (!byTeacher[code]) byTeacher[code] = [];
+          byTeacher[code].push(r);
+        });
+        for (const [code, items] of Object.entries(byTeacher)) {
+          const tAgg = aggregateClient(items);
+          for (let i = 0; i < questions.length; i++) {
+            const q = tAgg.overall[`Q${i+1}`];
+            if (!q) continue;
+            summaryRows.push([
+              `${code} 老師`,
+              questions[i], q.average,
+              q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
+              q.totalResponses
+            ]);
+          }
+        }
+      } else {
+        // Per class
+        for (const [cls, cdata] of Object.entries(agg.byClass || {})) {
+          const label = `${grade || ""} ${cls}班`;
+          for (let i = 0; i < questions.length; i++) {
+            const q = cdata.questions[`Q${i+1}`];
+            if (!q) continue;
+            summaryRows.push([
+              label, questions[i], q.average,
+              q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
+              q.totalResponses
+            ]);
+          }
         }
       }
 
@@ -592,7 +679,7 @@ function exportExcel() {
   // Save
   const dateStr = new Date().toISOString().slice(0, 10);
   const typeLabel = type === "student" ? "學生" : "教師";
-  const gradeLabel = grade || "全部";
+  const gradeLabel = type === "teacher" ? "整體" : (grade || "全部");
   XLSX.writeFile(wb, `STEAM問卷_${typeLabel}_${gradeLabel}_${dateStr}.xlsx`);
 }
 </script>
