@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>STEAM 科問卷 — 管理後台</title>
+<title>課程問卷 — 管理後台</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -40,6 +40,12 @@
   .btn-outline:hover { background: var(--primary-light); }
   .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
 
+  /* Department tabs */
+  .dept-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--border); border-radius: 8px; padding: 3px; }
+  .dept-tab { flex: 1; padding: 10px 16px; border: none; background: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.95rem; font-family: inherit; text-align: center; transition: all 0.2s; }
+  .dept-tab.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .dept-tab:hover:not(.active) { background: rgba(255,255,255,0.5); }
+
   /* Selectors */
   .selector-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
   .selector-row .form-group { min-width: 100px; }
@@ -71,11 +77,6 @@
   .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
 
-  /* Tabs */
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--border); border-radius: 8px; padding: 3px; }
-  .tab { flex: 1; padding: 8px 12px; border: none; background: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; font-family: inherit; text-align: center; transition: all 0.2s; }
-  .tab.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
   .hidden { display: none !important; }
   .empty-msg { text-align: center; color: var(--text-light); padding: 40px; font-size: 1rem; }
   .loading { text-align: center; padding: 30px; color: var(--text-light); }
@@ -91,7 +92,7 @@
 <body>
 
 <div class="header">
-  <h1>STEAM 科問卷調查 — 管理後台</h1>
+  <h1 id="headerTitle">課程問卷調查 — 管理後台</h1>
   <p>樂善堂梁黃蕙芳紀念學校 2025-2026</p>
 </div>
 
@@ -108,6 +109,12 @@
 
   <!-- Dashboard -->
   <div id="dashboardSection" class="hidden">
+    <!-- Department Tabs -->
+    <div class="dept-tabs">
+      <button class="dept-tab active" id="tabSteam" onclick="switchDept('steam')">🤖 STEAM 科</button>
+      <button class="dept-tab" id="tabScience" onclick="switchDept('science')">🔬 科學科</button>
+    </div>
+
     <!-- Controls -->
     <div class="card">
       <div class="selector-row">
@@ -122,9 +129,6 @@
           <label>年級</label>
           <select id="dGrade" onchange="loadResults()">
             <option value="">全部</option>
-            <option value="P1">P1</option><option value="P2">P2</option>
-            <option value="P3">P3</option><option value="P4">P4</option>
-            <option value="P5">P5</option><option value="P6">P6</option>
           </select>
         </div>
         <div class="form-group">
@@ -166,34 +170,84 @@
 const API_BASE = "";
 const ADMIN_PWD = "lstlwwf";
 
+/* ═══ Multi-department data ═══ */
 const QUESTIONS_TEXT = {
-  student: {
-    P1: ["Matatalab編程","Code.org遊戲","鍵盤打字","電腦堂活動","期待STEAM課"],
-    P2: ["Scratch Jr故事","Matatalab方向","Word文件","iPad學習","STEAM創意"],
-    P3: ["Micro:bit編程","Code.org序列","PPT簡報","安全上網","STEAM有趣"],
-    P4: ["騰訊AI平台","AI生成","AI素養","太陽能車","健康生活"],
-    P5: ["AI翻譯官","AI素養","四格漫畫","八大行星","STEAM DAY環保"],
-    P6: ["AI識花君","專題研習","一帶一路","AI素養","AI職業探索"],
+  steam: {
+    student: {
+      P1: ["Matatalab 機械人編程","Code.org 編程遊戲","鍵盤打字","電腦堂活動","期待 STEAM 課"],
+      P2: ["Scratch Jr 故事創作","Matatalab 方向挑戰","Word 文件製作","iPad 學習","STEAM 創意活動"],
+      P3: ["Micro:bit 編程","Code.org 序列與重複","PowerPoint 簡報製作","安全上網","STEAM 課堂活動"],
+      P4: ["騰訊 AI 平台學習","AI 生成圖片和文字","第一學段「AI基礎課程」— 正確使用 AI","GIGO「太陽能動力車」— 能源轉換","「健康生活天使」程式設計"],
+      P5: ["「AI中華文化翻譯官」— 自然語言處理","第一學段「AI基礎課程」— 判斷 AI 資訊","「狐假虎威」四格漫畫創作","「八大行星」互動導覽","STEAM DAY 環保活動"],
+      P6: ["「識花君」AI 植物百科","騰訊專題研習","「一帶一路」互動地圖","第一學段「AI基礎課程」— 運用 AI 輔助學習","AI 職業探索"],
+    },
+    teacher: ["STEAM 科課程提升運算思維","騰訊 AI 平台適合課堂教學","STEAM DAY 有助理解科技與環保","跨科整合提升學習動機","課程安排和資源足以支援教學"],
   },
-  teacher: ["運算思維","騰訊AI平台","STEAM DAY環保","跨科整合","課程資源"],
+  science: {
+    student: {
+      P1: ["觀察樹葉和動物活動","動手做實驗理解科學原理","感官探索活動認識身體","水和空氣的實驗","期待科學課"],
+      P4: ["「認識地球」岩石和土壤實驗","「生物與環境」食物鏈和生態平衡","遺傳特徵調查活動","口罩效能實驗","「芭蕉扇」科學探究活動"],
+    },
+    teacher: ["MAGIC SCIENCE 提升科學探究能力","動手做實驗有助理解科學概念","跨科協作（STEAM DAY）提升學習動機","PSCG 課程框架適合本校學生","課程安排和實驗資源足以支援教學"],
+  }
 };
 
-const TEACHERS = [
-  {code:"鋒",name:"楊錦鋒"},{code:"蕭",name:"蕭蕙欣"},{code:"高",name:"高健倫"},{code:"梁",name:"梁建華"},
-  {code:"鄧",name:"鄧思義"},{code:"瑤",name:"黃偉瑤"},{code:"容",name:"吳永容"},{code:"偉",name:"黃博偉"},
-  {code:"婷",name:"鍾詩婷"},{code:"軍",name:"李軍"},{code:"鳳",name:"何美鳳"},{code:"卿",name:"潘美卿"},
-];
+const TEACHERS = {
+  steam: [
+    {code:"鋒",name:"楊錦鋒"},{code:"蕭",name:"蕭蕙欣"},{code:"高",name:"高健倫"},{code:"梁",name:"梁建華"},
+    {code:"鄧",name:"鄧思義"},{code:"珞",name:"黃偉珞"},{code:"容",name:"吳永容"},{code:"偉",name:"黃博偉"},
+    {code:"婷",name:"鍾詩婷"},{code:"軍",name:"李軍"},{code:"鳳",name:"何美鳳"},{code:"卿",name:"潘美卿"},
+  ],
+  science: [
+    {code:"鋒",name:"楊錦鋒"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},
+    {code:"珞",name:"黃偉珞"},{code:"婷",name:"鍾詩婷"},{code:"卿",name:"潘美卿"},
+    {code:"睿",name:"吳永睿"},{code:"鳳",name:"何美鳳"},
+  ]
+};
 
-function teacherName(code) {
-  if (!code) return "";
-  const t = TEACHERS.find(t => t.code === code);
-  return t ? t.name : code;
-}
+const GRADE_OPTIONS = {
+  steam: ["P1","P2","P3","P4","P5","P6"],
+  science: ["P1","P4"]
+};
 
+const DEPT_LABELS = { steam: "STEAM 科", science: "科學科" };
+
+let currentDept = "steam";
 let auth = "";
 let currentData = null;
 let currentRaw = null;
 let charts = {};
+
+/* ═══ DEPARTMENT SWITCH ═══ */
+function switchDept(dept) {
+  currentDept = dept;
+  document.getElementById("tabSteam").classList.toggle("active", dept === "steam");
+  document.getElementById("tabScience").classList.toggle("active", dept === "science");
+  document.getElementById("headerTitle").textContent = DEPT_LABELS[dept] + " 問卷調查 — 管理後台";
+
+  // Rebuild grade options
+  const sel = document.getElementById("dGrade");
+  const prevGrade = sel.value;
+  sel.innerHTML = '<option value="">全部</option>';
+  GRADE_OPTIONS[dept].forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = g;
+    opt.textContent = g;
+    sel.appendChild(opt);
+  });
+  // Restore selection if still valid
+  if (GRADE_OPTIONS[dept].includes(prevGrade)) sel.value = prevGrade;
+
+  loadResults();
+}
+
+/* ═══ TEACHER NAME LOOKUP ═══ */
+function teacherName(code) {
+  if (!code) return "";
+  const list = TEACHERS[currentDept] || [];
+  const t = list.find(t => t.code === code);
+  return t ? t.name : code;
+}
 
 /* ═══ LOGIN ═══ */
 function doLogin() {
@@ -206,7 +260,7 @@ function doLogin() {
   auth = pwd;
   document.getElementById("loginSection").classList.add("hidden");
   document.getElementById("dashboardSection").classList.remove("hidden");
-  loadResults();
+  switchDept("steam");
 }
 
 /* ═══ LOAD RESULTS ═══ */
@@ -222,7 +276,7 @@ async function loadResults() {
   rawEl.innerHTML = "";
 
   try {
-    let url = `${API_BASE}/api/results?auth=${auth}&type=${type}`;
+    let url = `${API_BASE}/api/results?auth=${auth}&dept=${currentDept}&type=${type}`;
     if (grade && type === "student") url += `&grade=${grade}`;
     const resp = await fetch(url);
     const data = await resp.json();
@@ -281,8 +335,8 @@ function renderClassResults(data, type, grade) {
   }
 
   const questions = type === "student" && grade
-    ? QUESTIONS_TEXT.student[grade]
-    : QUESTIONS_TEXT.teacher;
+    ? QUESTIONS_TEXT[currentDept].student[grade]
+    : QUESTIONS_TEXT[currentDept].teacher;
 
   let html = "";
 
@@ -301,7 +355,8 @@ function renderClassResults(data, type, grade) {
 
     for (const [code, items] of Object.entries(byTeacher)) {
       const tAgg = aggregateClient(items);
-      html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">${code} 老師</h3>`;
+      const name = teacherName(code);
+      html += `<h3 style="margin:16px 0 8px;font-size:0.95rem;">${code} 老師${name !== code ? `（${name}）` : ""}</h3>`;
       html += buildTable(code, questions, tAgg.overall, tAgg.totalStudents);
     }
   } else {
@@ -420,8 +475,8 @@ function renderCharts(data, type, grade) {
   charts = {};
 
   const questions = type === "student" && grade
-    ? QUESTIONS_TEXT.student[grade]
-    : QUESTIONS_TEXT.teacher;
+    ? QUESTIONS_TEXT[currentDept].student[grade]
+    : QUESTIONS_TEXT[currentDept].teacher;
 
   if (!questions) {
     el.innerHTML = '<div class="empty-msg">請選擇年級以查看圖表</div>';
@@ -446,7 +501,6 @@ function renderCharts(data, type, grade) {
 
   // Draw per-question comparison charts
   if (type === "teacher") {
-    // Group by teacher code
     const byTeacher = {};
     (data.results || []).forEach(r => {
       const code = r.teacherCode || "未知";
@@ -540,13 +594,14 @@ function drawComparisonBar(canvasId, questionText, classAverages) {
 
 /* ═══ CSV EXPORT (server-side) ═══ */
 function exportCSV() {
-  window.open(`${API_BASE}/api/export?auth=${auth}`, "_blank");
+  window.open(`${API_BASE}/api/export?auth=${auth}&dept=${currentDept}`, "_blank");
 }
 
 /* ═══ EXCEL EXPORT (client-side via SheetJS) ═══ */
 function exportExcel() {
   const type = document.getElementById("dType").value;
   const grade = document.getElementById("dGrade").value;
+  const deptLabel = DEPT_LABELS[currentDept];
 
   if (!currentRaw || currentRaw.length === 0) {
     alert("暫無數據可匯出");
@@ -558,12 +613,13 @@ function exportExcel() {
   // --- Sheet 1: 原始數據 ---
   let rawHeader, rawRows;
   if (type === "teacher") {
-    rawHeader = ["教師代號", "類型", "總人數", "提交時間"];
+    rawHeader = ["學科", "教師代號", "類型", "總人數", "提交時間"];
     for (let i = 1; i <= 5; i++) {
       rawHeader.push(`Q${i}-5分`, `Q${i}-4分`, `Q${i}-3分`, `Q${i}-2分`, `Q${i}-1分`, `Q${i}-平均分`);
     }
     rawRows = currentRaw.map(r => {
       const row = [
+        deptLabel,
         r.teacherCode || "",
         "教師",
         r.totalStudents || "",
@@ -579,12 +635,13 @@ function exportExcel() {
       return row;
     });
   } else {
-    rawHeader = ["年級", "班別", "類型", "總人數", "提交時間"];
+    rawHeader = ["學科", "年級", "班別", "類型", "總人數", "提交時間"];
     for (let i = 1; i <= 5; i++) {
       rawHeader.push(`Q${i}-5分`, `Q${i}-4分`, `Q${i}-3分`, `Q${i}-2分`, `Q${i}-1分`, `Q${i}-平均分`);
     }
     rawRows = currentRaw.map(r => {
       const row = [
+        deptLabel,
         r.grade,
         r.className,
         "學生",
@@ -605,19 +662,19 @@ function exportExcel() {
   const ws1Data = [rawHeader, ...rawRows];
   const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
   ws1["!cols"] = type === "teacher"
-    ? [{wch:10},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})]
-    : [{wch:6},{wch:8},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})];
+    ? [{wch:10},{wch:10},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})]
+    : [{wch:10},{wch:6},{wch:8},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})];
   XLSX.utils.book_append_sheet(wb, ws1, "原始數據");
 
   // --- Sheet 2: 匯總統計 ---
   if (currentData && currentData.aggregated) {
     const agg = currentData.aggregated;
     const questions = type === "student" && grade
-      ? QUESTIONS_TEXT.student[grade]
-      : QUESTIONS_TEXT.teacher;
+      ? QUESTIONS_TEXT[currentDept].student[grade]
+      : QUESTIONS_TEXT[currentDept].teacher;
 
     if (questions) {
-      const summaryHeader = ["分類", "題目", "平均分", "5分人數", "4分人數", "3分人數", "2分人數", "1分人數", "總人數"];
+      const summaryHeader = ["學科", "分類", "題目", "平均分", "5分人數", "4分人數", "3分人數", "2分人數", "1分人數", "總人數"];
       const summaryRows = [];
 
       // Overall
@@ -625,6 +682,7 @@ function exportExcel() {
         const q = agg.overall[`Q${i+1}`];
         if (!q) continue;
         summaryRows.push([
+          deptLabel,
           type === "teacher" ? "全體教師" : "整體",
           questions[i], q.average,
           q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
@@ -633,7 +691,6 @@ function exportExcel() {
       }
 
       if (type === "teacher") {
-        // Per teacher code
         const byTeacher = {};
         currentRaw.forEach(r => {
           const code = r.teacherCode || "未知";
@@ -642,11 +699,13 @@ function exportExcel() {
         });
         for (const [code, items] of Object.entries(byTeacher)) {
           const tAgg = aggregateClient(items);
+          const name = teacherName(code);
           for (let i = 0; i < questions.length; i++) {
             const q = tAgg.overall[`Q${i+1}`];
             if (!q) continue;
             summaryRows.push([
-              `${code} 老師`,
+              deptLabel,
+              `${code} 老師${name !== code ? `（${name}）` : ""}`,
               questions[i], q.average,
               q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
               q.totalResponses
@@ -654,13 +713,13 @@ function exportExcel() {
           }
         }
       } else {
-        // Per class
         for (const [cls, cdata] of Object.entries(agg.byClass || {})) {
           const label = `${grade || ""} ${cls}班`;
           for (let i = 0; i < questions.length; i++) {
             const q = cdata.questions[`Q${i+1}`];
             if (!q) continue;
             summaryRows.push([
+              deptLabel,
               label, questions[i], q.average,
               q.distribution[5], q.distribution[4], q.distribution[3], q.distribution[2], q.distribution[1],
               q.totalResponses
@@ -671,7 +730,7 @@ function exportExcel() {
 
       const ws2Data = [summaryHeader, ...summaryRows];
       const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-      ws2["!cols"] = [{wch:12},{wch:30},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+      ws2["!cols"] = [{wch:10},{wch:16},{wch:36},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
       XLSX.utils.book_append_sheet(wb, ws2, "匯總統計");
     }
   }
@@ -680,7 +739,7 @@ function exportExcel() {
   const dateStr = new Date().toISOString().slice(0, 10);
   const typeLabel = type === "student" ? "學生" : "教師";
   const gradeLabel = type === "teacher" ? "整體" : (grade || "全部");
-  XLSX.writeFile(wb, `STEAM問卷_${typeLabel}_${gradeLabel}_${dateStr}.xlsx`);
+  XLSX.writeFile(wb, `${currentDept}_${typeLabel}_${gradeLabel}_${dateStr}.xlsx`);
 }
 </script>
 </body>
