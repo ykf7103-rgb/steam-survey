@@ -38,8 +38,8 @@ const QUESTIONS = {
   },
   ai: {
     student: {},
-    teacher: ["2 月 6 日教師 AI 工作坊（如 Gemini、AnyGen、NotebookLM、Canva）提升了我的 AI 教學能力","AI 工具能幫助我在課堂教學中提升教學效能","啟發潛能課的多元化活動安排（如 P5 發明品、P4 AI Lab、P1-P3 才藝活動）有效發展學生的多元潛能","AI 發展組的整體活動規劃（如教師工作坊、啟發潛能課、STEAM DAY）有效推動學校 AI 教育發展","現有 AI 教學資源和支援足以滿足教學需要"],
-    naApplicable: [0]
+    teacher: ["2 月 6 日教師 AI 工作坊（如 Gemini、AnyGen、NotebookLM、Canva）提升了我的 AI 教學與行政能力","AI 工具能幫助我在課堂教學中提升教學效能","啟發潛能課的多元化活動安排有效發展學生的多元潛能（只適用於負責老師，其他老師可選「不適用」）","AI 發展組的整體活動規劃（如教師工作坊、啟發潛能課、STEAM DAY）有效推動學校 AI 教育發展","現有 AI 教學資源和支援足以滿足教學需要"],
+    naApplicable: [2]
   }
 };
 
@@ -54,12 +54,7 @@ const TEACHERS = {
     {code:"珞",name:"黃偉珞"},{code:"婷",name:"鍾詩婷"},{code:"卿",name:"潘美卿"},
     {code:"睿",name:"吳永睿"},{code:"鳳",name:"何美鳳"},
   ],
-  ai: [
-    {code:"鋒",name:"楊錦鋒"},{code:"高",name:"高健倫"},{code:"鄧",name:"鄧思義"},{code:"珞",name:"黃偉珞"},
-    {code:"睿",name:"吳永睿"},{code:"楚",name:"張楚雯"},{code:"偉",name:"黃博偉"},{code:"婷",name:"鍾詩婷"},
-    {code:"彤",name:"卓映彤"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},{code:"容",name:"吳永容"},
-    {code:"梁",name:"梁建華"},{code:"卿",name:"潘美卿"},
-  ]
+  ai: Array.from({length:48},(_,i)=>({code:String(i+1),name:String(i+1)+"號"}))
 };
 
 const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
