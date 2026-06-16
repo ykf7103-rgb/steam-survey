@@ -222,7 +222,6 @@ export async function onRequest(context) {
       };
       await kv.put(`r:${id}`, JSON.stringify(record));
 
-      const index = await kv.get("meta:index", "json") || [];
       index.push({ id, dept: record.dept, grade, className: record.className, type, teacherCode: record.teacherCode, ts: record.timestamp });
       await kv.put("meta:index", JSON.stringify(index));
 
