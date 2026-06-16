@@ -1,6 +1,6 @@
 /**
  * Cloudflare Pages Function — /api/*
- * 問卷調查系統 v6 — 多學科（STEAM科 + 科學科）
+ * 問卷調查系統 v7 — 多學科（STEAM科 + 科學科 + AI發展組）
  *
  * 提交格式：
  *   { dept, grade, className, type, totalStudents,
@@ -35,6 +35,11 @@ const QUESTIONS = {
       P4: ["科學課的探究活動（如岩石探究、AI Garden 生態觀察）讓我學到地球科學和生態知識","科學課的實驗和觀察（如植物繁殖觀察、傳染病預防探究）幫助我理解生物和健康知識","科學課的實作活動（如搭建閉合電路、GIGO 太陽能車實驗）讓我認識電學和能源轉換","Magic Science 探究活動（如設計製作「文件夾面罩」）讓我了解物料特性和科學探究方法","Magic Science 探究活動（如製作「芭蕉扇」並結合《西遊記》閱讀）讓我學會公平測試和科學探究"]
     },
     teacher: ["MAGIC SCIENCE 探究課程有效提升學生的科學探究能力","動手做實驗有助學生理解科學概念","跨科協作（STEAM DAY）能有效提升學生的學習動機","PSCG 課程框架適合本校學生的學習需要","現有課程安排和實驗資源足以支援教學需要"]
+  },
+  ai: {
+    student: {},
+    teacher: ["2 月 6 日教師 AI 工作坊（如 Gemini、AnyGen、NotebookLM、Canva）提升了我的 AI 教學能力","AI 工具能幫助我在課堂教學中提升教學效能","啟發潛能課的多元化活動安排（如 P5 發明品、P4 AI Lab、P1-P3 才藝活動）有效發展學生的多元潛能","AI 發展組的整體活動規劃（如教師工作坊、啟發潛能課、STEAM DAY）有效推動學校 AI 教育發展","現有 AI 教學資源和支援足以滿足教學需要"],
+    naApplicable: [0]
   }
 };
 
@@ -48,10 +53,16 @@ const TEACHERS = {
     {code:"鋒",name:"楊錦鋒"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},
     {code:"珞",name:"黃偉珞"},{code:"婷",name:"鍾詩婷"},{code:"卿",name:"潘美卿"},
     {code:"睿",name:"吳永睿"},{code:"鳳",name:"何美鳳"},
+  ],
+  ai: [
+    {code:"鋒",name:"楊錦鋒"},{code:"高",name:"高健倫"},{code:"鄧",name:"鄧思義"},{code:"珞",name:"黃偉珞"},
+    {code:"睿",name:"吳永睿"},{code:"楚",name:"張楚雯"},{code:"偉",name:"黃博偉"},{code:"婷",name:"鍾詩婷"},
+    {code:"彤",name:"卓映彤"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},{code:"容",name:"吳永容"},
+    {code:"梁",name:"梁建華"},{code:"卿",name:"潘美卿"},
   ]
 };
 
-const DEPT_LABELS = { steam: "STEAM 科", science: "科學科" };
+const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -102,6 +113,7 @@ function aggregateResults(results) {
         distribution: dist,
         average: count > 0 ? Math.round((sum / count) * 100) / 100 : 0,
         totalResponses: count,
+        naCount: items.reduce((n, item) => n + (Number(item.questions?.[`Q${q+1}`]?.N) || 0), 0),
       };
     }
     aggregated[cls] = { studentCount: totalStudents, questions: qStats };
@@ -128,6 +140,7 @@ function aggregateResults(results) {
       distribution: dist,
       average: count > 0 ? Math.round((sum / count) * 100) / 100 : 0,
       totalResponses: count,
+      naCount: results.reduce((n, r) => n + (Number(r.questions?.[`Q${q+1}`]?.N) || 0), 0),
     };
   }
 
@@ -162,6 +175,17 @@ export async function onRequest(context) {
       return json(TEACHERS[dept] || []);
     }
 
+    // ── GET /api/completed?dept=steam&type=student ──
+    if (subPath === "/completed") {
+      const dept = url.searchParams.get("dept") || "steam";
+      const type = url.searchParams.get("type") || "student";
+      const index = await kv.get("meta:index", "json") || [];
+      const done = index
+        .filter(e => (e.dept || "steam") === dept && e.type === type)
+        .map(e => type === "teacher" ? e.teacherCode : `${e.grade}_${e.className}`);
+      return json([...new Set(done)]);
+    }
+
     // ── POST /api/submit ──
     if (subPath === "/submit" && request.method === "POST") {
       const body = await request.json();
@@ -171,6 +195,17 @@ export async function onRequest(context) {
       }
       if (type === "student" && !grade) {
         return json({ error: "Student survey requires grade" }, 400);
+      }
+
+      // Duplicate check
+      const index = await kv.get("meta:index", "json") || [];
+      const d = dept || "steam";
+      if (type === "teacher") {
+        const exists = index.find(e => (e.dept || "steam") === d && e.type === "teacher" && e.teacherCode === teacherCode);
+        if (exists) return json({ error: "此教師代號已完成填寫，不能重複提交" }, 409);
+      } else {
+        const exists = index.find(e => (e.dept || "steam") === d && e.type === "student" && e.grade === grade && e.className === className);
+        if (exists) return json({ error: "此班別已完成填寫，不能重複提交" }, 409);
       }
 
       const id = crypto.randomUUID();
@@ -243,7 +278,7 @@ export async function onRequest(context) {
       const deptLabel = DEPT_LABELS[dept] || dept;
       let header = "學科,年級,班別,類型,教師代號,總人數,提交時間";
       for (let i = 1; i <= 5; i++) {
-        header += `,Q${i}-5分,Q${i}-4分,Q${i}-3分,Q${i}-2分,Q${i}-1分,Q${i}-平均分`;
+        header += `,Q${i}-5分,Q${i}-4分,Q${i}-3分,Q${i}-2分,Q${i}-1分,Q${i}-不適用,Q${i}-平均分`;
       }
       const rows = [header];
       for (const r of results) {
@@ -253,7 +288,7 @@ export async function onRequest(context) {
         ];
         for (let i = 1; i <= 5; i++) {
           const qd = r.questions?.[`Q${i}`] || {};
-          row.push(qd[5] || 0, qd[4] || 0, qd[3] || 0, qd[2] || 0, qd[1] || 0);
+          row.push(qd[5] || 0, qd[4] || 0, qd[3] || 0, qd[2] || 0, qd[1] || 0, qd.N || 0);
           let sum = 0, cnt = 0;
           for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
           row.push(cnt > 0 ? (sum / cnt).toFixed(2) : "");

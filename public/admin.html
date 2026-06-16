@@ -17,9 +17,9 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
   .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-  .header { background: linear-gradient(135deg, #7c3aed, var(--primary)); color: white; padding: 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; }
-  .header h1 { font-size: 1.4rem; }
-  .header p { opacity: 0.85; font-size: 0.9rem; }
+  .header { background: linear-gradient(135deg, rgba(124,58,237,0.85), rgba(37,99,235,0.85)), url('school-bg.png') center/cover no-repeat; color: white; padding: 30px 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 1.4rem; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .header p { opacity: 0.9; font-size: 0.9rem; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
   .card { background: var(--card); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); }
   .card h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 16px; }
 
@@ -113,6 +113,7 @@
     <div class="dept-tabs">
       <button class="dept-tab active" id="tabSteam" onclick="switchDept('steam')">🤖 STEAM 科</button>
       <button class="dept-tab" id="tabScience" onclick="switchDept('science')">🔬 科學科</button>
+      <button class="dept-tab" id="tabAi" onclick="switchDept('ai')">🧠 AI 發展組</button>
     </div>
 
     <!-- Controls -->
@@ -189,6 +190,10 @@ const QUESTIONS_TEXT = {
       P4: ["科學課探究活動","科學課實驗和觀察","科學課實作活動","Magic Science 探究（文件夾面罩）","Magic Science 探究（芭蕉扇）"],
     },
     teacher: ["MAGIC SCIENCE 提升科學探究能力","動手做實驗有助理解科學概念","跨科協作（STEAM DAY）提升學習動機","PSCG 課程框架適合本校學生","課程安排和實驗資源足以支援教學"],
+  },
+  ai: {
+    student: {},
+    teacher: ["2月6日教師AI工作坊（Gemini/AnyGen/NotebookLM/Canva）","AI工具提升課堂教學效能","啟發潛能課多元活動安排","AI發展組整體活動規劃","AI教學資源和支援"],
   }
 };
 
@@ -202,15 +207,22 @@ const TEACHERS = {
     {code:"鋒",name:"楊錦鋒"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},
     {code:"珞",name:"黃偉珞"},{code:"婷",name:"鍾詩婷"},{code:"卿",name:"潘美卿"},
     {code:"睿",name:"吳永睿"},{code:"鳳",name:"何美鳳"},
+  ],
+  ai: [
+    {code:"鋒",name:"楊錦鋒"},{code:"高",name:"高健倫"},{code:"鄧",name:"鄧思義"},{code:"珞",name:"黃偉珞"},
+    {code:"睿",name:"吳永睿"},{code:"楚",name:"張楚雯"},{code:"偉",name:"黃博偉"},{code:"婷",name:"鍾詩婷"},
+    {code:"彤",name:"卓映彤"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},{code:"容",name:"吳永容"},
+    {code:"梁",name:"梁建華"},{code:"卿",name:"潘美卿"},
   ]
 };
 
 const GRADE_OPTIONS = {
   steam: ["P1","P2","P3","P4","P5","P6"],
-  science: ["P1","P4"]
+  science: ["P1","P4"],
+  ai: []
 };
 
-const DEPT_LABELS = { steam: "STEAM 科", science: "科學科" };
+const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
 
 let currentDept = "steam";
 let auth = "";
@@ -223,20 +235,31 @@ function switchDept(dept) {
   currentDept = dept;
   document.getElementById("tabSteam").classList.toggle("active", dept === "steam");
   document.getElementById("tabScience").classList.toggle("active", dept === "science");
+  document.getElementById("tabAi").classList.toggle("active", dept === "ai");
   document.getElementById("headerTitle").textContent = DEPT_LABELS[dept] + " 問卷調查 — 管理後台";
 
-  // Rebuild grade options
-  const sel = document.getElementById("dGrade");
-  const prevGrade = sel.value;
-  sel.innerHTML = '<option value="">全部</option>';
-  GRADE_OPTIONS[dept].forEach(g => {
-    const opt = document.createElement("option");
-    opt.value = g;
-    opt.textContent = g;
-    sel.appendChild(opt);
-  });
-  // Restore selection if still valid
-  if (GRADE_OPTIONS[dept].includes(prevGrade)) sel.value = prevGrade;
+  // AI dept: teacher only, no grade
+  const dType = document.getElementById("dType");
+  const dGrade = document.getElementById("dGrade");
+  if (dept === "ai") {
+    dType.value = "teacher";
+    dType.disabled = true;
+    dGrade.innerHTML = '<option value="">—</option>';
+    dGrade.disabled = true;
+  } else {
+    dType.disabled = false;
+    dGrade.disabled = false;
+    // Rebuild grade options
+    const prevGrade = dGrade.value;
+    dGrade.innerHTML = '<option value="">全部</option>';
+    GRADE_OPTIONS[dept].forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.textContent = g;
+      dGrade.appendChild(opt);
+    });
+    if (GRADE_OPTIONS[dept].includes(prevGrade)) dGrade.value = prevGrade;
+  }
 
   loadResults();
 }
@@ -393,14 +416,17 @@ function aggregateClient(results) {
       distribution: dist,
       average: count > 0 ? Math.round((sum / count) * 100) / 100 : 0,
       totalResponses: count,
+      naCount: results.reduce((n, r) => n + (Number(r.questions?.[`Q${q+1}`]?.N) || 0), 0),
     };
   }
   return { overall, totalStudents };
 }
 
 function buildTable(id, questions, qData, total) {
+  const showNA = currentDept === "ai";
   let html = `<table class="results-table"><thead><tr>`;
   html += `<th>題目</th><th>平均分</th><th>5分</th><th>4分</th><th>3分</th><th>2分</th><th>1分</th>`;
+  if (showNA) html += `<th style="background:#6b7280">不適用</th>`;
   html += `</tr></thead><tbody>`;
 
   for (let i = 0; i < questions.length; i++) {
@@ -415,6 +441,7 @@ function buildTable(id, questions, qData, total) {
     html += `<td class="score-3">${d[3]}</td>`;
     html += `<td class="score-2">${d[2]}</td>`;
     html += `<td class="score-1">${d[1]}</td>`;
+    if (showNA) html += `<td style="color:#6b7280;font-weight:600">${q.naCount || 0}</td>`;
     html += `</tr>`;
   }
 

@@ -15,9 +15,9 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
   .container { max-width: 860px; margin: 0 auto; padding: 20px; }
-  .header { background: linear-gradient(135deg, var(--primary), #7c3aed); color: white; padding: 32px 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; }
-  .header h1 { font-size: 1.5rem; margin-bottom: 4px; }
-  .header p { opacity: 0.85; font-size: 0.95rem; }
+  .header { background: linear-gradient(135deg, rgba(37,99,235,0.85), rgba(124,58,237,0.85)), url('school-bg.png') center/cover no-repeat; color: white; padding: 40px 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 1.5rem; margin-bottom: 4px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .header p { opacity: 0.9; font-size: 0.95rem; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
   .card { background: var(--card); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); }
   .card h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
   .card h2 .step { background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
@@ -26,25 +26,25 @@
   .form-group label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; font-weight: 600; }
   select, input[type="number"] { width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; background: white; transition: border-color 0.2s; }
   select:focus, input:focus { outline: none; border-color: var(--primary); }
+  select:disabled, option:disabled { opacity: 0.45; }
   .hidden { display: none !important; }
 
-  /* Department selection */
-  .dept-select { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; }
+  .dept-select { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
   .dept-select h2 { font-size: 1.3rem; color: var(--text); margin-bottom: 8px; }
-  .dept-select p { color: var(--text-light); margin-bottom: 32px; font-size: 0.95rem; }
-  .dept-buttons { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-  .dept-btn { width: 220px; padding: 28px 24px; border: 3px solid var(--border); border-radius: 16px; background: white; cursor: pointer; text-align: center; transition: all 0.3s; font-family: inherit; }
+  .dept-select p { color: var(--text-light); margin-bottom: 24px; font-size: 0.95rem; }
+  .dept-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .dept-btn { width: 200px; padding: 24px 20px; border: 3px solid var(--border); border-radius: 16px; background: white; cursor: pointer; text-align: center; transition: all 0.3s; font-family: inherit; }
   .dept-btn:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(37,99,235,0.15); }
-  .dept-btn .dept-icon { font-size: 2.5rem; margin-bottom: 8px; }
-  .dept-btn .dept-name { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
-  .dept-btn .dept-desc { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+  .dept-btn .dept-icon { font-size: 2.2rem; margin-bottom: 6px; }
+  .dept-btn .dept-name { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+  .dept-btn .dept-desc { font-size: 0.75rem; color: var(--text-light); margin-top: 4px; }
 
-  /* Type toggle */
   .type-toggle { display: flex; background: var(--border); border-radius: 8px; padding: 3px; margin-bottom: 16px; }
   .type-toggle button { flex: 1; padding: 10px; border: none; background: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
   .type-toggle button.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
   .q-block { padding: 16px 20px; background: #f8fafc; border-radius: 10px; margin-bottom: 14px; border-left: 4px solid var(--primary); }
+  .q-block.na-checked { border-left-color: var(--text-light); opacity: 0.5; }
   .q-text { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; }
   .q-inputs { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
   .score-input { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 80px; }
@@ -56,6 +56,9 @@
   .score-input .score-label.s1 { background: var(--s1); }
   .score-input input { width: 100%; text-align: center; padding: 8px; font-size: 1.1rem; font-weight: 600; border: 2px solid var(--border); border-radius: 8px; }
   .score-input input:focus { border-color: var(--primary); outline: none; }
+  .na-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; color: var(--text-light); cursor: pointer; }
+  .na-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+  .na-row:hover { background: #e2e8f0; }
   .q-subtotal { text-align: right; font-size: 0.8rem; color: var(--text-light); margin-top: 6px; }
   .q-subtotal.mismatch { color: var(--danger); font-weight: 600; }
   .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
@@ -82,6 +85,7 @@
   .admin-link { text-align: center; margin-top: 20px; }
   .admin-link a { color: var(--text-light); font-size: 0.85rem; text-decoration: none; }
   .admin-link a:hover { color: var(--primary); text-decoration: underline; }
+  .done-tag { display: inline-block; font-size: 0.7rem; background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-weight: 600; }
   @media (max-width: 600px) {
     .container { padding: 12px; }
     .card { padding: 16px; }
@@ -89,7 +93,9 @@
     .score-input { min-width: 56px; }
     .score-input input { padding: 6px; font-size: 1rem; }
     .header h1 { font-size: 1.25rem; }
-    .dept-btn { width: 160px; padding: 20px 16px; }
+    .dept-btn { width: 140px; padding: 16px 12px; }
+    .dept-btn .dept-icon { font-size: 1.8rem; }
+    .dept-btn .dept-name { font-size: 0.95rem; }
   }
 </style>
 </head>
@@ -104,8 +110,8 @@
 
   <!-- Department Selection -->
   <div id="deptSection" class="dept-select">
-    <h2>請選擇學科</h2>
-    <p>選擇您要填寫問卷的科目</p>
+    <h2>請選擇學科 / 組別</h2>
+    <p>選擇您要填寫問卷的科目或組別</p>
     <div class="dept-buttons">
       <button class="dept-btn" onclick="selectDept('steam')">
         <div class="dept-icon">🤖</div>
@@ -117,6 +123,11 @@
         <div class="dept-name">科學科</div>
         <div class="dept-desc">P1、P4 學生及教師問卷</div>
       </button>
+      <button class="dept-btn" onclick="selectDept('ai')">
+        <div class="dept-icon">🧠</div>
+        <div class="dept-name">AI 發展組</div>
+        <div class="dept-desc">全校教師問卷</div>
+      </button>
     </div>
     <div class="admin-link" style="margin-top:40px"><a href="/admin.html">管理後台 →</a></div>
   </div>
@@ -125,8 +136,8 @@
   <div id="surveySection" class="hidden">
     <div class="back-link"><a onclick="goBack()">← 返回學科選擇</a></div>
 
-    <!-- Type Toggle -->
-    <div class="type-toggle">
+    <!-- Type Toggle (hidden for AI) -->
+    <div class="type-toggle" id="typeToggle">
       <button class="active" onclick="switchType('student')">學生問卷</button>
       <button onclick="switchType('teacher')">教師問卷</button>
     </div>
@@ -162,7 +173,7 @@
       <!-- Teacher mode fields -->
       <div id="teacherFields" class="hidden">
         <div class="teacher-info">
-          <strong id="teacherInfoLabel">教師問卷</strong>：請選擇您的教師代號，然後填寫 5 題評估題目。
+          <strong id="teacherInfoLabel">教師問卷</strong>：請選擇您的教師代號，然後填寫評估題目。
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -219,6 +230,11 @@ const QUESTIONS = {
       P4: ["科學課的探究活動（如岩石探究、AI Garden 生態觀察）讓我學到地球科學和生態知識","科學課的實驗和觀察（如植物繁殖觀察、傳染病預防探究）幫助我理解生物和健康知識","科學課的實作活動（如搭建閉合電路、GIGO 太陽能車實驗）讓我認識電學和能源轉換","Magic Science 探究活動（如設計製作「文件夾面罩」）讓我了解物料特性和科學探究方法","Magic Science 探究活動（如製作「芭蕉扇」並結合《西遊記》閱讀）讓我學會公平測試和科學探究"]
     },
     teacher: ["MAGIC SCIENCE 探究課程有效提升學生的科學探究能力","動手做實驗有助學生理解科學概念","跨科協作（STEAM DAY）能有效提升學生的學習動機","PSCG 課程框架適合本校學生的學習需要","現有課程安排和實驗資源足以支援教學需要"]
+  },
+  ai: {
+    student: {},
+    teacher: ["2 月 6 日教師 AI 工作坊（如 Gemini、AnyGen、NotebookLM、Canva）提升了我的 AI 教學能力","AI 工具能幫助我在課堂教學中提升教學效能","啟發潛能課的多元化活動安排（如 P5 發明品、P4 AI Lab、P1-P3 才藝活動）有效發展學生的多元潛能","AI 發展組的整體活動規劃（如教師工作坊、啟發潛能課、STEAM DAY）有效推動學校 AI 教育發展","現有 AI 教學資源和支援足以滿足教學需要"],
+    naApplicable: [0]
   }
 };
 
@@ -232,26 +248,45 @@ const TEACHERS = {
     {code:"鋒",name:"楊錦鋒"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},
     {code:"珞",name:"黃偉珞"},{code:"婷",name:"鍾詩婷"},{code:"卿",name:"潘美卿"},
     {code:"睿",name:"吳永睿"},{code:"鳳",name:"何美鳳"},
+  ],
+  ai: [
+    {code:"鋒",name:"楊錦鋒"},{code:"高",name:"高健倫"},{code:"鄧",name:"鄧思義"},{code:"珞",name:"黃偉珞"},
+    {code:"睿",name:"吳永睿"},{code:"楚",name:"張楚雯"},{code:"偉",name:"黃博偉"},{code:"婷",name:"鍾詩婷"},
+    {code:"彤",name:"卓映彤"},{code:"軍",name:"李軍"},{code:"蕭",name:"蕭蕙欣"},{code:"容",name:"吳永容"},
+    {code:"梁",name:"梁建華"},{code:"卿",name:"潘美卿"},
   ]
 };
 
 const GRADE_OPTIONS = {
   steam: ["P1","P2","P3","P4","P5","P6"],
-  science: ["P1","P4"]
+  science: ["P1","P4"],
+  ai: []
 };
 
-const DEPT_LABELS = { steam: "STEAM 科", science: "科學科" };
-
+const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
 const SCORE_LABELS = { 5: "非常同意", 4: "同意", 3: "普通", 2: "不同意", 1: "完全不同意" };
 
-let state = { dept: "", type: "student", grade: "", className: "", totalStudents: 0, teacherCode: "", distributions: {} };
+let state = { dept: "", type: "student", grade: "", className: "", totalStudents: 0, teacherCode: "", distributions: {}, naFlags: {} };
+let completedStudent = [];
+let completedTeacher = [];
 
 /* ═══ DEPARTMENT SELECTION ═══ */
-function selectDept(dept) {
+async function selectDept(dept) {
   state.dept = dept;
   document.getElementById("deptSection").classList.add("hidden");
   document.getElementById("surveySection").classList.remove("hidden");
   document.querySelector(".header p").textContent = DEPT_LABELS[dept] + " 課程問卷調查 2025-2026";
+
+  // AI mode: teacher only, hide toggle
+  const isAI = dept === "ai";
+  document.getElementById("typeToggle").classList.toggle("hidden", isAI);
+  if (isAI) {
+    state.type = "teacher";
+    document.getElementById("studentFields").classList.add("hidden");
+    document.getElementById("teacherFields").classList.remove("hidden");
+    document.getElementById("step1Title").textContent = "教師資料";
+    document.getElementById("subtotalHint").classList.add("hidden");
+  }
 
   // Populate grade options
   const selGrade = document.getElementById("selGrade");
@@ -274,26 +309,92 @@ function selectDept(dept) {
   });
 
   document.getElementById("teacherInfoLabel").textContent = DEPT_LABELS[dept] + "教師問卷";
+
+  // Load completed submissions
+  completedStudent = [];
+  completedTeacher = [];
+  try {
+    const [sRes, tRes] = await Promise.all([
+      fetch(`${API_BASE}/api/completed?dept=${dept}&type=student`),
+      fetch(`${API_BASE}/api/completed?dept=${dept}&type=teacher`)
+    ]);
+    completedStudent = await sRes.json();
+    completedTeacher = await tRes.json();
+  } catch (e) { /* ignore */ }
+
+  // Mark completed options
+  markCompleted();
   resetState();
+}
+
+function markCompleted() {
+  // Mark completed grade+class options
+  const selGrade = document.getElementById("selGrade");
+  for (const opt of selGrade.options) {
+    if (!opt.value) continue;
+    const allDone = ["A","B","C","D"].every(c => completedStudent.includes(`${opt.value}_${c}`));
+    if (allDone) opt.disabled = true;
+  }
+
+  // Mark completed teacher options
+  const selTeacher = document.getElementById("selTeacher");
+  for (const opt of selTeacher.options) {
+    if (!opt.value) continue;
+    if (completedTeacher.includes(opt.value)) {
+      opt.disabled = true;
+      opt.textContent = opt.value + "（已完成）";
+    }
+  }
+}
+
+function checkClassDone() {
+  if (state.type !== "student") return;
+  const key = `${state.grade}_${state.className}`;
+  if (completedStudent.includes(key)) {
+    alert(`${state.grade} ${state.className} 班已完成問卷，不能重複提交。`);
+    document.getElementById("selGrade").value = "";
+    document.getElementById("selClass").value = "";
+    state.grade = "";
+    state.className = "";
+    hideForm();
+    return true;
+  }
+  return false;
+}
+
+function checkTeacherDone() {
+  if (state.type !== "teacher") return;
+  if (completedTeacher.includes(state.teacherCode)) {
+    alert(`${state.teacherCode} 老師已完成問卷，不能重複提交。`);
+    document.getElementById("selTeacher").value = "";
+    state.teacherCode = "";
+    hideForm();
+    return true;
+  }
+  return false;
 }
 
 function goBack() {
   document.getElementById("deptSection").classList.remove("hidden");
   document.getElementById("surveySection").classList.add("hidden");
+  document.getElementById("typeToggle").classList.remove("hidden");
   document.querySelector(".header p").textContent = "課程問卷調查 2025-2026";
   resetState();
 }
 
 function resetState() {
-  state.type = "student";
+  if (state.dept !== "ai") state.type = "student";
   state.grade = "";
   state.className = "";
   state.totalStudents = 0;
   state.teacherCode = "";
   state.distributions = {};
-  document.querySelectorAll(".type-toggle button").forEach((b, i) => b.classList.toggle("active", i === 0));
-  document.getElementById("studentFields").classList.remove("hidden");
-  document.getElementById("teacherFields").classList.add("hidden");
+  state.naFlags = {};
+  if (state.dept !== "ai") {
+    document.querySelectorAll(".type-toggle button").forEach((b, i) => b.classList.toggle("active", i === 0));
+    document.getElementById("studentFields").classList.remove("hidden");
+    document.getElementById("teacherFields").classList.add("hidden");
+  }
   document.getElementById("selGrade").value = "";
   document.getElementById("selClass").value = "";
   document.getElementById("totalStudents").value = "";
@@ -305,6 +406,7 @@ function resetState() {
 function switchType(type) {
   state.type = type;
   state.distributions = {};
+  state.naFlags = {};
   document.querySelectorAll(".type-toggle button").forEach((b, i) => {
     b.classList.toggle("active", (i === 0 && type === "student") || (i === 1 && type === "teacher"));
   });
@@ -318,6 +420,7 @@ function switchType(type) {
 /* ═══ SELECTION CHANGE ═══ */
 function onSelectionChange() {
   state.distributions = {};
+  state.naFlags = {};
 
   if (state.type === "student") {
     state.grade = document.getElementById("selGrade").value;
@@ -325,12 +428,14 @@ function onSelectionChange() {
     state.totalStudents = parseInt(document.getElementById("totalStudents").value) || 0;
     state.teacherCode = "";
     if (!state.grade || !state.className) { hideForm(); return; }
+    if (checkClassDone()) return;
   } else {
     state.teacherCode = document.getElementById("selTeacher").value;
     state.grade = "";
     state.className = "";
     state.totalStudents = 0;
     if (!state.teacherCode) { hideForm(); return; }
+    if (checkTeacherDone()) return;
   }
 
   showForm();
@@ -356,6 +461,7 @@ function showForm() {
 
   questions.forEach((_, i) => {
     state.distributions[`Q${i+1}`] = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    state.naFlags[`Q${i+1}`] = false;
   });
 
   renderQuestions(questions);
@@ -370,17 +476,39 @@ function onTotalChange() {
 
 /* ═══ RENDER ═══ */
 function renderQuestions(questions) {
+  const naApplicable = QUESTIONS[state.dept]?.naApplicable || [];
   let html = "";
   questions.forEach((q, i) => {
     const qKey = `Q${i+1}`;
-    html += `<div class="q-block"><div class="q-text">${qKey}. ${q}</div><div class="q-inputs">`;
+    const hasNA = naApplicable.includes(i);
+    html += `<div class="q-block" id="block_${qKey}"><div class="q-text">${qKey}. ${q}</div><div class="q-inputs" id="inputs_${qKey}">`;
     for (let s = 5; s >= 1; s--) {
       html += `<div class="score-input"><span class="score-label s${s}">${s}分 ${SCORE_LABELS[s]}</span>`;
       html += `<input type="number" min="0" max="45" value="0" id="${qKey}_${s}" oninput="onScoreInput('${qKey}',${s},this.value)"></div>`;
     }
-    html += `</div><div class="q-subtotal" id="sub_${qKey}">小計：0 人</div></div>`;
+    html += `</div>`;
+    if (hasNA) {
+      html += `<label class="na-row" onclick="event.stopPropagation()"><input type="checkbox" id="na_${qKey}" onchange="toggleNA('${qKey}',this.checked)"> 不適用（如未參與此活動，請剔選此项）</label>`;
+    }
+    html += `<div class="q-subtotal" id="sub_${qKey}">小計：0 人</div></div>`;
   });
   document.getElementById("questionsArea").innerHTML = html;
+}
+
+function toggleNA(qKey, checked) {
+  state.naFlags[qKey] = checked;
+  const block = document.getElementById(`block_${qKey}`);
+  const inputs = document.getElementById(`inputs_${qKey}`);
+  if (checked) {
+    block.classList.add("na-checked");
+    inputs.querySelectorAll("input").forEach(inp => { inp.disabled = true; inp.value = 0; });
+    for (let s = 1; s <= 5; s++) state.distributions[qKey][s] = 0;
+  } else {
+    block.classList.remove("na-checked");
+    inputs.querySelectorAll("input").forEach(inp => inp.disabled = false);
+  }
+  updateSubtotals();
+  updateSummary();
 }
 
 function onScoreInput(qKey, score, val) {
@@ -394,7 +522,10 @@ function updateSubtotals() {
   for (const [qKey, dist] of Object.entries(state.distributions)) {
     const sub = Object.values(dist).reduce((a, b) => a + b, 0);
     const el = document.getElementById(`sub_${qKey}`);
-    if (state.type === "student" && total > 0) {
+    if (state.naFlags[qKey]) {
+      el.textContent = "不適用";
+      el.className = "q-subtotal";
+    } else if (state.type === "student" && total > 0) {
       if (sub < total) {
         el.textContent = `已輸入 ${sub} 人（還欠 ${total - sub} 人）`;
         el.className = "q-subtotal mismatch";
@@ -416,7 +547,9 @@ function updateSummary() {
   const questions = state.type === "student"
     ? QUESTIONS[state.dept].student[state.grade]
     : QUESTIONS[state.dept].teacher;
-  const filled = Object.values(state.distributions).filter(d => Object.values(d).some(v => v > 0)).length;
+  const filled = Object.entries(state.distributions).filter(([k, d]) =>
+    state.naFlags[k] || Object.values(d).some(v => v > 0)
+  ).length;
   const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師`;
   document.getElementById("submitSummary").textContent = `${who} — 已填寫 ${filled}/${questions.length} 題`;
 }
@@ -425,20 +558,31 @@ function updateSummary() {
 async function submitSurvey() {
   const btn = document.getElementById("submitBtn");
   const status = document.getElementById("submitStatus");
+  const questions = state.type === "student"
+    ? QUESTIONS[state.dept].student[state.grade]
+    : QUESTIONS[state.dept].teacher;
 
-  const empty = Object.entries(state.distributions).filter(([_, d]) => Object.values(d).every(v => v === 0));
-  if (empty.length > 0) {
-    showStatus(status, "error", `有 ${empty.length} 題尚未輸入人數，請先完成所有題目。`);
+  // Check all answered (either filled or NA)
+  const unanswered = Object.entries(state.distributions).filter(([k, d]) =>
+    !state.naFlags[k] && Object.values(d).every(v => v === 0)
+  );
+  if (unanswered.length > 0) {
+    showStatus(status, "error", `有 ${unanswered.length} 題尚未填寫，請完成所有題目（或選擇「不適用」）。`);
     return;
   }
 
+  // Student count check
   if (state.type === "student" && state.totalStudents > 0) {
-    const mismatched = Object.entries(state.distributions).map(([key, d]) => {
+    const mismatched = Object.entries(state.distributions).filter(([k, d]) => {
+      if (state.naFlags[k]) return false;
       const sub = Object.values(d).reduce((a, b) => a + b, 0);
-      return sub !== state.totalStudents ? { key, sub } : null;
-    }).filter(Boolean);
+      return sub !== state.totalStudents;
+    });
     if (mismatched.length > 0) {
-      const detail = mismatched.map(m => `${m.key}（已填 ${m.sub}，還欠 ${state.totalStudents - m.sub}）`).join("、");
+      const detail = mismatched.map(([k, d]) => {
+        const sub = Object.values(d).reduce((a, b) => a + b, 0);
+        return `${k}（已填 ${sub}，還欠 ${state.totalStudents - sub}）`;
+      }).join("、");
       showStatus(status, "error", `有 ${mismatched.length} 題人數不符（總人數 ${state.totalStudents}）：${detail}`);
       return;
     }
@@ -448,10 +592,17 @@ async function submitSurvey() {
   btn.innerHTML = '<span class="spinner"></span>提交中...';
 
   try {
+    // Build distributions with N/A flags
+    const finalQ = {};
+    for (const [k, d] of Object.entries(state.distributions)) {
+      finalQ[k] = { ...d };
+      if (state.naFlags[k]) finalQ[k].N = 1;
+    }
+
     const body = {
       dept: state.dept,
       type: state.type,
-      questions: state.distributions,
+      questions: finalQ,
       totalStudents: state.type === "student" ? state.totalStudents : 1,
     };
     if (state.type === "student") { body.grade = state.grade; body.className = state.className; }
@@ -466,6 +617,10 @@ async function submitSurvey() {
     if (data.success) {
       const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師`;
       showStatus(status, "success", `成功提交 ${who} 的 ${DEPT_LABELS[state.dept]}問卷結果！`);
+      // Mark as completed locally
+      if (state.type === "student") completedStudent.push(`${state.grade}_${state.className}`);
+      if (state.type === "teacher") completedTeacher.push(state.teacherCode);
+      markCompleted();
     } else {
       showStatus(status, "error", "提交失敗：" + (data.error || "未知錯誤"));
     }
