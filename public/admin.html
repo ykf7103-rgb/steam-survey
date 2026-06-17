@@ -15,11 +15,13 @@
     --score5: #16a34a; --score4: #65a30d; --score3: #f59e0b; --score2: #ea580c; --score1: #dc2626;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(37,99,235,0.1)), url('school-bg.png') center/cover no-repeat fixed; background-color: var(--bg); color: var(--text); line-height: 1.6; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.92); border-radius: var(--radius); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-  .header { background: rgba(255,255,255,0.92); padding: 30px 24px; border-radius: 0 0 var(--radius) var(--radius); text-align: center; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-  .header h1 { font-size: 1.4rem; color: #1e293b; }
-  .header p { font-size: 0.9rem; color: #475569; }
+  body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background: url('school-bg.png') center/cover no-repeat fixed; background-color: #e2e8f0; color: var(--text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .header { position: relative; height: 200px; background: url('school-bg.png') center/cover no-repeat; overflow: hidden; margin-bottom: 24px; }
+  .header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 55%; background: linear-gradient(to top, rgba(15,23,42,0.75), transparent); }
+  .header-inner { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px 28px; }
+  .header h1 { font-size: 1.4rem; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+  .header p { font-size: 0.9rem; color: rgba(255,255,255,0.9); text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
   .card { background: var(--card); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); }
   .card h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 16px; }
 
@@ -92,8 +94,10 @@
 <body>
 
 <div class="header">
-  <h1 id="headerTitle">課程問卷調查 — 管理後台</h1>
-  <p>樂善堂梁黃蕙芳紀念學校 2025-2026</p>
+  <div class="header-inner">
+    <h1 id="headerTitle">課程問卷調查 — 管理後台</h1>
+    <p>樂善堂梁黃蕙芳紀念學校 2025-2026</p>
+  </div>
 </div>
 
 <div class="container">
