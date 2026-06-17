@@ -220,7 +220,7 @@ const QUESTIONS = {
       P3: ["我喜歡用 Micro:bit 進行編程","Code.org 幫助我理解序列和重複的概念","我學會了製作 PowerPoint 簡報","我學會了安全地使用互聯網","STEAM 科的課堂活動很有趣"],
       P4: ["我喜歡在騰訊 AI 平台上學習","AI 生成圖片和文字讓我覺得很有趣","第一學段的「AI基礎課程」幫助我懂得正確使用 AI","GIGO「太陽能動力車」讓我學到能源轉換知識","「健康生活天使」程式設計幫助我了解健康生活習慣"],
       P5: ["「AI中華文化翻譯官」讓我學到自然語言處理","第一學段的「AI基礎課程」幫助我懂得正確使用 AI","「狐假虎威」四格漫畫創作讓我更有創意","「八大行星」互動導覽讓我學到更多天文知識","STEAM DAY 活動讓我對環保有更深認識"],
-      P6: ["「識花君」AI 植物百科讓我對生物多樣性更感興趣","騰訊專題研習提升了我的研究能力","「一帶一路」互動地圖幫助我了解中國地理","第一學段的「AI基礎課程」幫助我懂得正確使用 AI","AI 幫助我探索未來的職業方向"]
+      P6: ["「識花君」AI 植物百科讓我對生物多樣性更感興趣","騰訊專題研習提升了我的科技應用能力（只適用於6A及6C）","「一帶一路」互動地圖幫助我了解中國地理","第一學段的「AI基礎課程」幫助我懂得正確使用 AI","AI 幫助我探索未來的職業方向"]
     },
     teacher: ["STEAM 科課程有效提升學生的運算思維","騰訊 AI 平台適合用於課堂教學","STEAM DAY 活動有助學生理解科技與環保的關係","跨科整合能有效提升學生的學習動機","現有課程安排和資源足以支援教學需要"]
   },
@@ -269,6 +269,10 @@ const GRADE_OPTIONS = {
   steam: ["P1","P2","P3","P4","P5","P6"],
   science: ["P1","P4"],
   ai: []
+};
+
+const NA_BY_GRADE = {
+  steam: { P6: [1] }
 };
 
 const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
@@ -321,7 +325,7 @@ async function selectDept(dept) {
   TEACHERS[dept].forEach(t => {
     const opt = document.createElement("option");
     opt.value = t.code;
-    opt.textContent = t.code + " " + t.name;
+    opt.textContent = t.code;
     selTeacher.appendChild(opt);
   });
 
@@ -361,7 +365,7 @@ function markCompleted() {
     if (completedTeacher.includes(opt.value)) {
       const teacher = teacherList.find(t => t.code === opt.value);
       opt.disabled = true;
-      opt.textContent = (teacher ? teacher.code + " " + teacher.name : opt.value) + "（已完成）";
+      opt.textContent = opt.value + "（已完成）";
     }
   }
 }
@@ -384,8 +388,7 @@ function checkClassDone() {
 function checkTeacherDone() {
   if (state.type !== "teacher") return;
   if (completedTeacher.includes(state.teacherCode)) {
-    const teacher = (TEACHERS[state.dept] || []).find(t => t.code === state.teacherCode);
-    alert(`${teacher ? teacher.code + " " + teacher.name : state.teacherCode} 已完成問卷，不能重複提交。`);
+    alert(`${state.teacherCode} 已完成問卷，不能重複提交。`);
     document.getElementById("selTeacher").value = "";
     state.teacherCode = "";
     hideForm();
@@ -497,10 +500,11 @@ function onTotalChange() {
 /* ═══ RENDER ═══ */
 function renderQuestions(questions) {
   const naApplicable = QUESTIONS[state.dept]?.naApplicable || [];
+  const naByGrade = NA_BY_GRADE[state.dept]?.[state.grade] || [];
   let html = "";
   questions.forEach((q, i) => {
     const qKey = `Q${i+1}`;
-    const hasNA = naApplicable.includes(i);
+    const hasNA = naApplicable.includes(i) || naByGrade.includes(i);
     html += `<div class="q-block" id="block_${qKey}"><div class="q-text">${qKey}. ${q}</div><div class="q-inputs" id="inputs_${qKey}">`;
     for (let s = 5; s >= 1; s--) {
       html += `<div class="score-input"><span class="score-label s${s}">${s}分 ${SCORE_LABELS[s]}</span>`;
