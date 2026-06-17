@@ -54,7 +54,20 @@ const TEACHERS = {
     {code:"珞",name:"黃偉珞"},{code:"婷",name:"鍾詩婷"},{code:"卿",name:"潘美卿"},
     {code:"睿",name:"吳永睿"},{code:"鳳",name:"何美鳳"},
   ],
-  ai: Array.from({length:48},(_,i)=>({code:String(i+1),name:String(i+1)+"號"}))
+  ai: [
+    {code:"許",name:"許敏詩"},{code:"張",name:"張慧文"},{code:"瑞",name:"林瑞芳"},{code:"勞",name:"勞惠嫻"},
+    {code:"蕭",name:"蕭蕙欣"},{code:"林",name:"林美玲"},{code:"馮",name:"馮祉禧"},{code:"梁",name:"梁建華"},
+    {code:"高",name:"高健倫"},{code:"龔",name:"龔凱凝"},{code:"蓓",name:"黃蓓琪"},{code:"儀",name:"陳婉儀"},
+    {code:"睿",name:"吳永睿"},{code:"珞",name:"黃偉珞"},{code:"鋒",name:"楊錦鋒"},{code:"美",name:"林美玲"},
+    {code:"明",name:"高俊明"},{code:"楚",name:"張楚雯"},{code:"秋",name:"任秋彤"},{code:"映",name:"卓映彤"},
+    {code:"楊",name:"楊惠娟"},{code:"天",name:"李天恩"},{code:"軍",name:"李軍"},{code:"鑫",name:"蔡貴鑫"},
+    {code:"雅",name:"郭瑩雅"},{code:"玟",name:"李玟欣"},{code:"雪",name:"陳雪儀"},{code:"卿",name:"潘美卿"},
+    {code:"梓",name:"伍梓耀"},{code:"晴",name:"范茵晴"},{code:"慧",name:"黃慧玲"},{code:"鄺",name:"鄺家宜"},
+    {code:"淑",name:"凌淑佩"},{code:"秀",name:"李立秀"},{code:"嘉",name:"黃嘉慧"},{code:"施",name:"陳仲施"},
+    {code:"偉",name:"黃博偉"},{code:"琳",name:"霍曉琳"},{code:"婷",name:"鍾詩婷"},{code:"鳳",name:"何美鳳"},
+    {code:"敏",name:"黃思敏"},{code:"艷",name:"李艷歡"},{code:"荃",name:"陳佩荃"},{code:"珊",name:"蔡曉珊"},
+    {code:"蘇",name:"蘇美靜"},{code:"于",name:"任于敏"},{code:"香",name:"香寶媛"},{code:"鄧",name:"鄧思義"},
+  ]
 };
 
 const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
