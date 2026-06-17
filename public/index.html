@@ -59,6 +59,11 @@
   .na-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 10px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; color: var(--text-light); cursor: pointer; }
   .na-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
   .na-row:hover { background: #e2e8f0; }
+  .teacher-scores { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .teacher-score-btn { padding: 10px 14px; border: 2px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+  .teacher-score-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+  .teacher-score-btn.selected { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+  .teacher-score-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .q-subtotal { text-align: right; font-size: 0.8rem; color: var(--text-light); margin-top: 6px; }
   .q-subtotal.mismatch { color: var(--danger); font-weight: 600; }
   .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
@@ -278,7 +283,7 @@ const NA_BY_GRADE = {
 const DEPT_LABELS = { steam: "STEAM 科", science: "科學科", ai: "AI 發展組" };
 const SCORE_LABELS = { 5: "非常同意", 4: "同意", 3: "普通", 2: "不同意", 1: "完全不同意" };
 
-let state = { dept: "", type: "student", grade: "", className: "", totalStudents: 0, teacherCode: "", distributions: {}, naFlags: {} };
+let state = { dept: "", type: "student", grade: "", className: "", totalStudents: 0, teacherCode: "", distributions: {}, naFlags: {}, scores: {} };
 let completedStudent = [];
 let completedTeacher = [];
 
@@ -413,6 +418,7 @@ function resetState() {
   state.teacherCode = "";
   state.distributions = {};
   state.naFlags = {};
+  state.scores = {};
   if (state.dept !== "ai") {
     document.querySelectorAll(".type-toggle button").forEach((b, i) => b.classList.toggle("active", i === 0));
     document.getElementById("studentFields").classList.remove("hidden");
@@ -430,6 +436,7 @@ function switchType(type) {
   state.type = type;
   state.distributions = {};
   state.naFlags = {};
+  state.scores = {};
   document.querySelectorAll(".type-toggle button").forEach((b, i) => {
     b.classList.toggle("active", (i === 0 && type === "student") || (i === 1 && type === "teacher"));
   });
@@ -444,6 +451,7 @@ function switchType(type) {
 function onSelectionChange() {
   state.distributions = {};
   state.naFlags = {};
+  state.scores = {};
 
   if (state.type === "student") {
     state.grade = document.getElementById("selGrade").value;
@@ -485,6 +493,7 @@ function showForm() {
   questions.forEach((_, i) => {
     state.distributions[`Q${i+1}`] = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     state.naFlags[`Q${i+1}`] = false;
+    state.scores[`Q${i+1}`] = null;
   });
 
   renderQuestions(questions);
@@ -501,20 +510,34 @@ function onTotalChange() {
 function renderQuestions(questions) {
   const naApplicable = QUESTIONS[state.dept]?.naApplicable || [];
   const naByGrade = NA_BY_GRADE[state.dept]?.[state.grade] || [];
+  const isTeacher = state.type === "teacher";
   let html = "";
   questions.forEach((q, i) => {
     const qKey = `Q${i+1}`;
     const hasNA = naApplicable.includes(i) || naByGrade.includes(i);
-    html += `<div class="q-block" id="block_${qKey}"><div class="q-text">${qKey}. ${q}</div><div class="q-inputs" id="inputs_${qKey}">`;
-    for (let s = 5; s >= 1; s--) {
-      html += `<div class="score-input"><span class="score-label s${s}">${s}分 ${SCORE_LABELS[s]}</span>`;
-      html += `<input type="number" min="0" max="45" value="0" id="${qKey}_${s}" oninput="onScoreInput('${qKey}',${s},this.value)"></div>`;
+    html += `<div class="q-block" id="block_${qKey}"><div class="q-text">${qKey}. ${q}</div>`;
+    if (isTeacher) {
+      html += `<div class="teacher-scores" id="inputs_${qKey}">`;
+      for (let s = 5; s >= 1; s--) {
+        html += `<button type="button" class="teacher-score-btn s${s}" id="${qKey}_${s}" onclick="selectScore('${qKey}',${s})">${s}分 ${SCORE_LABELS[s]}</button>`;
+      }
+      html += `</div>`;
+    } else {
+      html += `<div class="q-inputs" id="inputs_${qKey}">`;
+      for (let s = 5; s >= 1; s--) {
+        html += `<div class="score-input"><span class="score-label s${s}">${s}分 ${SCORE_LABELS[s]}</span>`;
+        html += `<input type="number" min="0" max="45" value="0" id="${qKey}_${s}" oninput="onScoreInput('${qKey}',${s},this.value)"></div>`;
+      }
+      html += `</div>`;
+    }
+    if (hasNA) {
+      const naLabel = isTeacher ? "不適用（如此題不適用於您，請剔選）" : "不適用（如未參與此活動，請剔選此项）";
+      html += `<label class="na-row" onclick="event.stopPropagation()"><input type="checkbox" id="na_${qKey}" onchange="toggleNA('${qKey}',this.checked)"> ${naLabel}</label>`;
+    }
+    if (!isTeacher) {
+      html += `<div class="q-subtotal" id="sub_${qKey}">小計：0 人</div>`;
     }
     html += `</div>`;
-    if (hasNA) {
-      html += `<label class="na-row" onclick="event.stopPropagation()"><input type="checkbox" id="na_${qKey}" onchange="toggleNA('${qKey}',this.checked)"> 不適用（如未參與此活動，請剔選此项）</label>`;
-    }
-    html += `<div class="q-subtotal" id="sub_${qKey}">小計：0 人</div></div>`;
   });
   document.getElementById("questionsArea").innerHTML = html;
 }
@@ -525,13 +548,24 @@ function toggleNA(qKey, checked) {
   const inputs = document.getElementById(`inputs_${qKey}`);
   if (checked) {
     block.classList.add("na-checked");
-    inputs.querySelectorAll("input").forEach(inp => { inp.disabled = true; inp.value = 0; });
+    inputs.querySelectorAll("input, button").forEach(inp => { inp.disabled = true; if (inp.tagName === "INPUT") inp.value = 0; });
+    inputs.querySelectorAll(".teacher-score-btn").forEach(btn => btn.classList.remove("selected"));
     for (let s = 1; s <= 5; s++) state.distributions[qKey][s] = 0;
+    if (state.type === "teacher") state.scores[qKey] = null;
   } else {
     block.classList.remove("na-checked");
-    inputs.querySelectorAll("input").forEach(inp => inp.disabled = false);
+    inputs.querySelectorAll("input, button").forEach(inp => inp.disabled = false);
   }
   updateSubtotals();
+  updateSummary();
+}
+
+function selectScore(qKey, score) {
+  state.scores[qKey] = score;
+  for (let s = 1; s <= 5; s++) {
+    const btn = document.getElementById(`${qKey}_${s}`);
+    btn.classList.toggle("selected", s === score);
+  }
   updateSummary();
 }
 
@@ -571,9 +605,14 @@ function updateSummary() {
   const questions = state.type === "student"
     ? QUESTIONS[state.dept].student[state.grade]
     : QUESTIONS[state.dept].teacher;
-  const filled = Object.entries(state.distributions).filter(([k, d]) =>
-    state.naFlags[k] || Object.values(d).some(v => v > 0)
-  ).length;
+  let filled;
+  if (state.type === "teacher") {
+    filled = Object.keys(state.scores).filter(k => state.scores[k] !== null || state.naFlags[k]).length;
+  } else {
+    filled = Object.entries(state.distributions).filter(([k, d]) =>
+      state.naFlags[k] || Object.values(d).some(v => v > 0)
+    ).length;
+  }
   const who = state.type === "student" ? `${state.grade} ${state.className}班` : `${state.teacherCode} 老師`;
   document.getElementById("submitSummary").textContent = `${who} — 已填寫 ${filled}/${questions.length} 題`;
 }
@@ -587,9 +626,14 @@ async function submitSurvey() {
     : QUESTIONS[state.dept].teacher;
 
   // Check all answered (either filled or NA)
-  const unanswered = Object.entries(state.distributions).filter(([k, d]) =>
-    !state.naFlags[k] && Object.values(d).every(v => v === 0)
-  );
+  let unanswered;
+  if (state.type === "teacher") {
+    unanswered = Object.keys(state.scores).filter(k => !state.naFlags[k] && state.scores[k] === null);
+  } else {
+    unanswered = Object.entries(state.distributions).filter(([k, d]) =>
+      !state.naFlags[k] && Object.values(d).every(v => v === 0)
+    ).map(([k]) => k);
+  }
   if (unanswered.length > 0) {
     showStatus(status, "error", `有 ${unanswered.length} 題尚未填寫，請完成所有題目（或選擇「不適用」）。`);
     return;
@@ -618,9 +662,20 @@ async function submitSurvey() {
   try {
     // Build distributions with N/A flags
     const finalQ = {};
-    for (const [k, d] of Object.entries(state.distributions)) {
-      finalQ[k] = { ...d };
-      if (state.naFlags[k]) finalQ[k].N = 1;
+    if (state.type === "teacher") {
+      for (const k of Object.keys(state.scores)) {
+        if (state.naFlags[k]) {
+          finalQ[k] = { 5:0, 4:0, 3:0, 2:0, 1:0, N:1 };
+        } else {
+          finalQ[k] = { 5:0, 4:0, 3:0, 2:0, 1:0 };
+          finalQ[k][state.scores[k]] = 1;
+        }
+      }
+    } else {
+      for (const [k, d] of Object.entries(state.distributions)) {
+        finalQ[k] = { ...d };
+        if (state.naFlags[k]) finalQ[k].N = 1;
+      }
     }
 
     const body = {
