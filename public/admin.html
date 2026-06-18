@@ -475,6 +475,7 @@ function renderRawData(results, type, grade) {
   if (type === "teacher") html += `<th>教師代號</th>`;
   html += `<th>總人數</th><th>提交時間</th>`;
   for (let i = 1; i <= 5; i++) html += `<th>Q${i} 平均</th>`;
+  if (currentDept === "ai") html += `<th>建議 / 想新增的 AI 功能</th>`;
   html += `</tr></thead><tbody>`;
 
   results.forEach((r, idx) => {
@@ -496,6 +497,10 @@ function renderRawData(results, type, grade) {
       for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
       const avg = cnt > 0 ? (sum / cnt).toFixed(2) : "—";
       html += `<td>${avg}</td>`;
+    }
+    if (currentDept === "ai") {
+      const sug = r.suggestion || "";
+      html += `<td style="text-align:left;font-size:0.8rem;max-width:200px;word-break:break-word">${sug ? sug : "—"}</td>`;
     }
     html += `</tr>`;
   });
@@ -656,6 +661,7 @@ function exportExcel() {
     for (let i = 1; i <= 5; i++) {
       rawHeader.push(`Q${i}-5分`, `Q${i}-4分`, `Q${i}-3分`, `Q${i}-2分`, `Q${i}-1分`, `Q${i}-平均分`);
     }
+    if (currentDept === "ai") rawHeader.push("建議 / 想新增的 AI 功能");
     rawRows = currentRaw.map(r => {
       const row = [
         deptLabel,
@@ -671,6 +677,7 @@ function exportExcel() {
         for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
         row.push(cnt > 0 ? Math.round((sum / cnt) * 100) / 100 : "");
       }
+      if (currentDept === "ai") row.push(r.suggestion || "");
       return row;
     });
   } else {
@@ -700,9 +707,12 @@ function exportExcel() {
 
   const ws1Data = [rawHeader, ...rawRows];
   const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-  ws1["!cols"] = type === "teacher"
-    ? [{wch:10},{wch:10},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})]
-    : [{wch:10},{wch:6},{wch:8},{wch:6},{wch:8},{wch:20}, ...Array(30).fill({wch:8})];
+  const baseCols = type === "teacher"
+    ? [{wch:10},{wch:10},{wch:6},{wch:8},{wch:20}]
+    : [{wch:10},{wch:6},{wch:8},{wch:6},{wch:8},{wch:20}];
+  const qCols = Array(30).fill({wch:8});
+  const extraCols = currentDept === "ai" ? [{wch:40}] : [];
+  ws1["!cols"] = [...baseCols, ...qCols, ...extraCols];
   XLSX.utils.book_append_sheet(wb, ws1, "原始數據");
 
   // --- Sheet 2: 匯總統計 ---

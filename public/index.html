@@ -92,6 +92,11 @@
   .admin-link a { color: var(--text-light); font-size: 0.85rem; text-decoration: none; }
   .admin-link a:hover { color: var(--primary); text-decoration: underline; }
   .done-tag { display: inline-block; font-size: 0.7rem; background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-weight: 600; }
+  .suggestion-box { margin-top: 16px; padding: 16px 20px; background: #f0f9ff; border-radius: 10px; border-left: 4px solid #0ea5e9; }
+  .suggestion-box label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: #0c4a6e; }
+  .suggestion-box textarea { width: 100%; min-height: 80px; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.95rem; font-family: inherit; resize: vertical; transition: border-color 0.2s; }
+  .suggestion-box textarea:focus { outline: none; border-color: #0ea5e9; }
+  .suggestion-box .hint { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
   @media (max-width: 600px) {
     .container { padding: 12px; }
     .card { padding: 16px; }
@@ -213,6 +218,11 @@
     <div class="card hidden" id="submitCard">
       <h2><span class="step">3</span> 確認並提交</h2>
       <p id="submitSummary" style="margin-bottom: 12px; color: var(--text-light);"></p>
+      <div id="suggestionArea" class="suggestion-box hidden">
+        <label>其他建議或想新增的 AI 功能</label>
+        <textarea id="suggestionText" placeholder="歡迎分享您的想法或建議..."></textarea>
+        <div class="hint">（選填）此欄位可不填寫直接提交</div>
+      </div>
       <div class="btn-group">
         <button class="btn btn-success" id="submitBtn" onclick="submitSurvey()">提交問卷結果</button>
         <button class="btn btn-outline" onclick="resetAll()">重新填寫</button>
@@ -497,6 +507,8 @@ function hideForm() {
 function showForm() {
   document.getElementById("questionsCard").classList.remove("hidden");
   document.getElementById("submitCard").classList.remove("hidden");
+  document.getElementById("suggestionArea").classList.toggle("hidden", state.dept !== "ai");
+  document.getElementById("suggestionText").value = "";
 
   const questions = state.type === "student"
     ? QUESTIONS[state.dept].student[state.grade]
@@ -703,6 +715,10 @@ async function submitSurvey() {
     };
     if (state.type === "student") { body.grade = state.grade; body.className = state.className; }
     if (state.type === "teacher") body.teacherCode = state.teacherCode;
+    if (state.dept === "ai") {
+      const sug = document.getElementById("suggestionText").value.trim();
+      if (sug) body.suggestion = sug;
+    }
 
     const resp = await fetch(`${API_BASE}/api/submit`, {
       method: "POST",

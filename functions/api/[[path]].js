@@ -197,7 +197,7 @@ export async function onRequest(context) {
     // ── POST /api/submit ──
     if (subPath === "/submit" && request.method === "POST") {
       const body = await request.json();
-      const { dept, grade, className, type, totalStudents, questions, teacherCode } = body;
+      const { dept, grade, className, type, totalStudents, questions, teacherCode, suggestion } = body;
       if (!type || !questions) {
         return json({ error: "Missing fields: type, questions" }, 400);
       }
@@ -226,6 +226,7 @@ export async function onRequest(context) {
         totalStudents: totalStudents || 0,
         teacherCode: teacherCode || "",
         questions,
+        suggestion: suggestion || "",
         timestamp: new Date().toISOString(),
       };
       await kv.put(`r:${id}`, JSON.stringify(record));
@@ -287,6 +288,7 @@ export async function onRequest(context) {
       for (let i = 1; i <= 5; i++) {
         header += `,Q${i}-5分,Q${i}-4分,Q${i}-3分,Q${i}-2分,Q${i}-1分,Q${i}-不適用,Q${i}-平均分`;
       }
+      if (dept === "ai") header += ",建議或想新增的AI功能";
       const rows = [header];
       for (const r of results) {
         const row = [
@@ -300,6 +302,7 @@ export async function onRequest(context) {
           for (let s = 1; s <= 5; s++) { const n = Number(qd[s]) || 0; sum += s * n; cnt += n; }
           row.push(cnt > 0 ? (sum / cnt).toFixed(2) : "");
         }
+        if (dept === "ai") row.push('"' + (r.suggestion || "").replace(/"/g, '""') + '"');
         rows.push(row.join(","));
       }
       return new Response("\uFEFF" + rows.join("\n"), {
